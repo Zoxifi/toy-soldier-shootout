@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Click the Target Game</title>
+    <style>
+        body {
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: #f0f0f0;
+            font-family: Arial, sans-serif;
+        }
+        #gameArea {
+            width: 600px;
+            height: 400px;
+            background-color: white;
+            border: 2px solid #333;
+            position: relative;
+            margin: 20px;
+            cursor: pointer;
+        }
+        #target {
+            width: 50px;
+            height: 50px;
+            background-color: red;
+            border-radius: 50%;
+            position: absolute;
+            transition: all 0.2s;
+        }
+        #score {
+            font-size: 24px;
+            margin: 10px;
+        }
+        #startButton {
+            padding: 10px 20px;
+            font-size: 18px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        #startButton:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+    <h1>Click the Target Game</h1>
+    <div id="score">Score: 0</div>
+    <div id="gameArea">
+        <div id="target"></div>
+    </div>
+    <button id="startButton">Start Game</button>
+
+    <script>
+        const target = document.getElementById('target');
+        const gameArea = document.getElementById('gameArea');
+        const scoreElement = document.getElementById('score');
+        const startButton = document.getElementById('startButton');
+        let score = 0;
+        let gameInterval;
+        let isGameRunning = false;
+
+        function moveTarget() {
+            const maxX = gameArea.clientWidth - target.clientWidth;
+            const maxY = gameArea.clientHeight - target.clientHeight;
+            
+            const randomX = Math.floor(Math.random() * maxX);
+            const randomY = Math.floor(Math.random() * maxY);
+            
+            target.style.left = randomX + 'px';
+            target.style.top = randomY + 'px';
+        }
+
+        function startGame() {
+            if (isGameRunning) return;
+            
+            score = 0;
+            scoreElement.textContent = `Score: ${score}`;
+            isGameRunning = true;
+            startButton.textContent = 'Game Running';
+            startButton.disabled = true;
+            
+            moveTarget();
+            gameInterval = setInterval(moveTarget, 1000);
+        }
+
+        target.addEventListener('click', () => {
+            if (!isGameRunning) return;
+            score += 1;
+            scoreElement.textContent = `Score: ${score}`;
+            moveTarget();
+        });
+
+        startButton.addEventListener('click', startGame);
+    </script>
+</body>
+</html>
