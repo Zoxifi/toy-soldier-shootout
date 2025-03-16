@@ -2,6 +2,10 @@
 
 A fun, cartoony first-person shooter game where you play as a toy soldier in a child's bedroom, shooting toy ducks.
 
+## Play Online
+
+You can play the game online at: [https://zoxifi.github.io/toy-soldier-shootout/](https://zoxifi.github.io/toy-soldier-shootout/)
+
 ## Game Features
 
 - **Cartoony Graphics**: Bright colors and simplified materials for a playful look
