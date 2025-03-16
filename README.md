@@ -1,32 +1,38 @@
-# Click the Target Game
+# Toy Soldier Shootout
 
-A simple browser-based game where players need to click on a moving target to score points.
+A fun, cartoony first-person shooter game where you play as a toy soldier in a child's bedroom, shooting toy ducks.
+
+## Game Features
+
+- **Cartoony Graphics**: Bright colors and simplified materials for a playful look
+- **Multiple Weapons**: Pistol, Shotgun, Rifle, and Laser Gun with unique properties
+- **Wave-Based Gameplay**: Defeat all ducks to advance to the next wave
+- **Upgrade System**: Spend money earned from defeating ducks on health, speed, and damage upgrades
+- **Settings Menu**: Adjust mouse sensitivity and graphics quality
+
+## Controls
+
+- **WASD**: Move around
+- **Mouse**: Aim
+- **Left Click**: Shoot
+- **Mouse Wheel/Number Keys (1-4)**: Switch weapons
+- **ESC**: Pause/Exit pointer lock
 
 ## How to Play
 
-1. Click the "Start Game" button to begin
-2. A red circle (target) will appear in the game area
-3. Click the target as fast as you can to score points
-4. Each time you click the target:
-   - You get 1 point
-   - The target moves to a random position
-   - The target moves automatically every second even if you don't click it
+1. Click the "Start Game" button
+2. Shoot as many toy ducks as possible before time runs out
+3. Earn money for each duck you defeat
+4. Between waves, spend your money on upgrades
+5. Try to survive as many waves as possible!
 
 ## Technologies Used
 
-- HTML
-- CSS
+- HTML5
+- CSS3
 - JavaScript
+- Three.js for 3D rendering
 
-## Features
+## Credits
 
-- Simple and intuitive gameplay
-- Score tracking
-- Responsive design
-
-## Future Improvements
-
-- Add a timer
-- Add difficulty levels
-- Add high score tracking
-- Add different types of targets 
+Created as a fun project to demonstrate 3D game development with Three.js. 

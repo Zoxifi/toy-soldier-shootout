@@ -3,100 +3,2899 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Click the Target Game</title>
+    <title>Toy Soldier Shootout</title>
     <style>
         body {
             margin: 0;
+            overflow: hidden;
+            font-family: 'Poppins', 'Segoe UI', Arial, sans-serif;
+            background-color: #121212;
+        }
+        #gameContainer {
+            position: relative;
+            width: 100%;
+            height: 100vh;
+        }
+        #gameCanvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+        #ui {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+        #crosshair {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 20px;
+            height: 20px;
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 24px;
+            user-select: none;
+            text-shadow: 0 0 5px #00ffff;
+        }
+        .ui-container {
+            background: linear-gradient(135deg, rgba(25, 25, 35, 0.8) 0%, rgba(45, 45, 65, 0.8) 100%);
+            border-radius: 10px;
+            padding: 10px 15px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(100, 100, 255, 0.2);
+        }
+        #scoreContainer {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            color: #ffffff;
+            font-size: 24px;
+            text-shadow: 0 0 10px rgba(0, 255, 255, 0.7);
+            user-select: none;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        #scoreContainer::before {
+            content: "🎯";
+            font-size: 28px;
+        }
+        #timerContainer {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            color: #ffffff;
+            font-size: 24px;
+            text-shadow: 0 0 10px rgba(255, 100, 100, 0.7);
+            user-select: none;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        #timerContainer::before {
+            content: "⏱️";
+            font-size: 28px;
+        }
+        #gameOverScreen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, rgba(20, 20, 30, 0.9) 0%, rgba(40, 10, 30, 0.9) 100%);
             display: flex;
             flex-direction: column;
+            justify-content: center;
             align-items: center;
-            background-color: #f0f0f0;
-            font-family: Arial, sans-serif;
+            color: white;
+            font-size: 36px;
+            visibility: hidden;
+            backdrop-filter: blur(10px);
+            text-shadow: 0 0 20px rgba(255, 0, 100, 0.7);
         }
-        #gameArea {
-            width: 600px;
-            height: 400px;
-            background-color: white;
-            border: 2px solid #333;
-            position: relative;
-            margin: 20px;
-            cursor: pointer;
-        }
-        #target {
-            width: 50px;
-            height: 50px;
-            background-color: red;
-            border-radius: 50%;
-            position: absolute;
-            transition: all 0.2s;
-        }
-        #score {
+        .game-button {
+            margin-top: 20px;
+            padding: 12px 30px;
             font-size: 24px;
-            margin: 10px;
-        }
-        #startButton {
-            padding: 10px 20px;
-            font-size: 18px;
-            background-color: #4CAF50;
+            background: linear-gradient(135deg, #ff4d6d 0%, #c1121f 100%);
             color: white;
             border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            pointer-events: auto;
+            box-shadow: 0 5px 15px rgba(255, 0, 100, 0.4);
+            transition: all 0.2s ease;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .game-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(255, 0, 100, 0.6);
+        }
+        .game-button:active {
+            transform: translateY(1px);
+            box-shadow: 0 2px 10px rgba(255, 0, 100, 0.4);
+        }
+        #startScreen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, rgba(20, 20, 40, 0.9) 0%, rgba(60, 20, 80, 0.9) 100%);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            z-index: 100;
+            pointer-events: auto;
+        }
+        #gameTitle {
+            font-size: 60px;
+            margin-bottom: 30px;
+            color: transparent;
+            background: linear-gradient(135deg, #ff9a8b 0%, #ff6b6b 50%, #ff0a6c 100%);
+            background-clip: text;
+            -webkit-background-clip: text;
+            text-shadow: 0 5px 15px rgba(255, 0, 100, 0.3);
+            font-weight: 800;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+        #startButton {
+            padding: 15px 40px;
+            font-size: 28px;
+        }
+        #settingsButton {
+            margin-top: 15px;
+            padding: 10px 30px;
+            font-size: 20px;
+            background: linear-gradient(135deg, #4d79ff 0%, #2541b2 100%);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            pointer-events: auto;
+            box-shadow: 0 5px 15px rgba(0, 100, 255, 0.4);
+            transition: all 0.2s ease;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        #settingsButton:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0, 100, 255, 0.6);
+        }
+        #settingsButton:active {
+            transform: translateY(1px);
+            box-shadow: 0 2px 10px rgba(0, 100, 255, 0.4);
+        }
+        #settingsMenu {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, rgba(20, 20, 40, 0.95) 0%, rgba(40, 20, 60, 0.95) 100%);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            z-index: 101;
+            pointer-events: auto;
+            display: none;
+        }
+        #settingsTitle {
+            font-size: 40px;
+            margin-bottom: 30px;
+            color: transparent;
+            background: linear-gradient(135deg, #4d79ff 0%, #2541b2 100%);
+            background-clip: text;
+            -webkit-background-clip: text;
+            text-shadow: 0 5px 15px rgba(0, 100, 255, 0.3);
+            font-weight: 800;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+        .settings-container {
+            width: 80%;
+            max-width: 500px;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 20px;
+            border-radius: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            margin-bottom: 20px;
+        }
+        .setting-item {
+            margin: 20px 0;
+        }
+        .setting-label {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            font-size: 18px;
+        }
+        .setting-value {
+            font-weight: bold;
+            color: #4d79ff;
+        }
+        .setting-slider {
+            width: 100%;
+            height: 10px;
+            -webkit-appearance: none;
+            appearance: none;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 5px;
+            outline: none;
+        }
+        .setting-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #4d79ff;
+            cursor: pointer;
+            box-shadow: 0 0 5px rgba(0, 100, 255, 0.8);
+        }
+        .setting-slider::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #4d79ff;
+            cursor: pointer;
+            box-shadow: 0 0 5px rgba(0, 100, 255, 0.8);
+        }
+        .graphics-options {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 10px;
+        }
+        .graphics-option {
+            padding: 8px 15px;
+            background: rgba(0, 0, 0, 0.3);
             border-radius: 5px;
             cursor: pointer;
+            transition: all 0.2s ease;
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
-        #startButton:hover {
-            background-color: #45a049;
+        .graphics-option:hover {
+            background: rgba(50, 50, 80, 0.5);
+        }
+        .graphics-option.active {
+            background: #4d79ff;
+            box-shadow: 0 0 10px rgba(0, 100, 255, 0.5);
+        }
+        #backButton {
+            margin-top: 20px;
+            padding: 10px 30px;
+            font-size: 20px;
+            background: linear-gradient(135deg, #ff4d6d 0%, #c1121f 100%);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            pointer-events: auto;
+            box-shadow: 0 5px 15px rgba(255, 0, 100, 0.4);
+            transition: all 0.2s ease;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        #backButton:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(255, 0, 100, 0.6);
+        }
+        #backButton:active {
+            transform: translateY(1px);
+            box-shadow: 0 2px 10px rgba(255, 0, 100, 0.4);
+        }
+        #instructions {
+            margin-top: 40px;
+            font-size: 18px;
+            text-align: center;
+            max-width: 80%;
+            line-height: 1.6;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 20px;
+            border-radius: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        #pointerLockMessage {
+            margin-top: 20px;
+            font-size: 16px;
+            color: #ffcc00;
+            display: none;
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { opacity: 0.7; }
+            50% { opacity: 1; }
+            100% { opacity: 0.7; }
+        }
+        #healthContainer {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            color: white;
+            font-size: 20px;
+            text-shadow: 0 0 10px rgba(255, 0, 0, 0.7);
+            user-select: none;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        #healthContainer::before {
+            content: "❤️";
+            font-size: 24px;
+            margin-right: 10px;
+        }
+        #healthBar {
+            width: 200px;
+            height: 15px;
+            background-color: rgba(0, 0, 0, 0.5);
+            border-radius: 10px;
+            overflow: hidden;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 0 10px rgba(255, 0, 0, 0.5);
+        }
+        #healthFill {
+            height: 100%;
+            background: linear-gradient(90deg, #ff0000, #ff5555);
+            width: 100%;
+            transition: width 0.3s;
+        }
+        #damageOverlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle, rgba(255, 0, 0, 0.1) 0%, rgba(255, 0, 0, 0.4) 100%);
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        #waveContainer {
+            position: absolute;
+            top: 70px;
+            left: 20px;
+            color: white;
+            font-size: 24px;
+            text-shadow: 0 0 10px rgba(100, 200, 255, 0.7);
+            user-select: none;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        #waveContainer::before {
+            content: "🌊";
+            font-size: 28px;
+        }
+        #waveMessage {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-size: 48px;
+            text-shadow: 0 0 30px rgba(100, 200, 255, 0.9);
+            text-align: center;
+            opacity: 0;
+            transition: opacity 0.5s;
+            pointer-events: none;
+            font-weight: bold;
+            letter-spacing: 2px;
+        }
+        #moneyContainer {
+            position: absolute;
+            top: 120px;
+            left: 20px;
+            color: #ffcc00;
+            font-size: 24px;
+            text-shadow: 0 0 10px rgba(255, 200, 0, 0.7);
+            user-select: none;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        #moneyContainer::before {
+            content: "💰";
+            font-size: 28px;
+        }
+        #shopContainer {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: linear-gradient(135deg, rgba(30, 30, 50, 0.95) 0%, rgba(50, 30, 70, 0.95) 100%);
+            padding: 30px;
+            border-radius: 20px;
+            color: white;
+            text-align: center;
+            display: none;
+            pointer-events: auto;
+            z-index: 10;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            border: 2px solid rgba(100, 100, 255, 0.3);
+            backdrop-filter: blur(10px);
+            max-width: 90%;
+            width: 500px;
+        }
+        #shopTitle {
+            font-size: 36px;
+            margin-bottom: 20px;
+            color: transparent;
+            background: linear-gradient(135deg, #ffcc00 0%, #ff9500 100%);
+            background-clip: text;
+            -webkit-background-clip: text;
+            font-weight: bold;
+            letter-spacing: 1px;
+        }
+        #shopMoney {
+            font-size: 24px;
+            margin-bottom: 25px;
+            color: #ffcc00;
+            text-shadow: 0 0 10px rgba(255, 200, 0, 0.5);
+        }
+        .shopItem {
+            margin: 15px 0;
+            padding: 15px;
+            background: linear-gradient(135deg, rgba(60, 60, 100, 0.6) 0%, rgba(80, 60, 120, 0.6) 100%);
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border: 1px solid rgba(100, 100, 255, 0.2);
+        }
+        .shopItem:hover:not(.disabled) {
+            background: linear-gradient(135deg, rgba(80, 80, 120, 0.8) 0%, rgba(100, 80, 140, 0.8) 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+        .shopItem.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            filter: grayscale(70%);
+        }
+        .shopItem.maxed {
+            background: linear-gradient(135deg, rgba(40, 40, 40, 0.6) 0%, rgba(60, 60, 60, 0.6) 100%);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .shopItem.maxed::after {
+            content: "MAXED";
+            background: rgba(255, 0, 0, 0.7);
+            padding: 3px 8px;
+            border-radius: 5px;
+            font-size: 14px;
+            font-weight: bold;
+        }
+        .shopItemInfo {
+            text-align: left;
+        }
+        .shopItemName {
+            font-weight: bold;
+            font-size: 18px;
+            margin-bottom: 5px;
+        }
+        .shopItemDesc {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.7);
+        }
+        .shopItemCost {
+            color: #ffcc00;
+            font-weight: bold;
+        }
+        .shopItemLevel {
+            display: flex;
+            gap: 2px;
+            margin-top: 5px;
+        }
+        .levelDot {
+            width: 10px;
+            height: 10px;
+            background-color: rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+        }
+        .levelDot.filled {
+            background-color: #00ffff;
+            box-shadow: 0 0 5px #00ffff;
+        }
+        #continueButton {
+            margin-top: 30px;
+            padding: 12px 25px;
+            font-size: 20px;
+            background: linear-gradient(135deg, #4d79ff 0%, #2541b2 100%);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(0, 100, 255, 0.4);
+            transition: all 0.2s ease;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        #continueButton:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0, 100, 255, 0.6);
+        }
+        #continueButton:active {
+            transform: translateY(1px);
+            box-shadow: 0 2px 10px rgba(0, 100, 255, 0.4);
+        }
+        #weaponContainer {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            color: white;
+            font-size: 20px;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+            user-select: none;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            background: linear-gradient(135deg, rgba(25, 25, 35, 0.8) 0%, rgba(45, 45, 65, 0.8) 100%);
+            border-radius: 10px;
+            padding: 10px 15px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(100, 100, 255, 0.2);
+        }
+        #weaponName {
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: #00ffff;
+        }
+        #weaponStats {
+            font-size: 14px;
+            color: #ffcc00;
+        }
+        .weapon-icon {
+            width: 40px;
+            height: 40px;
+            margin-left: 10px;
+            cursor: pointer;
+            opacity: 0.6;
+            transition: opacity 0.3s;
+        }
+        .weapon-icon.active {
+            opacity: 1;
+            transform: scale(1.2);
+        }
+        .bullet {
+            position: absolute;
+            width: 5px;
+            height: 5px;
+            background-color: #ffcc00;
+            border-radius: 50%;
+            pointer-events: none;
+        }
+        .weapon-selector {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .weapon-option {
+            width: 40px;
+            height: 40px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 20px;
+            cursor: pointer;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.2s;
+            opacity: 0.6;
+            pointer-events: auto;
+        }
+        .weapon-option:hover {
+            background: rgba(50, 50, 80, 0.5);
+        }
+        .weapon-option.active {
+            background: linear-gradient(135deg, rgba(0, 200, 255, 0.3) 0%, rgba(0, 100, 255, 0.3) 100%);
+            border: 1px solid rgba(0, 200, 255, 0.5);
+            opacity: 1;
+            transform: scale(1.1);
+            box-shadow: 0 0 10px rgba(0, 200, 255, 0.5);
+        }
+        .weapon-option.locked {
+            opacity: 0.3;
+            cursor: not-allowed;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 0, 0, 0.3);
+        }
+        .weapon-option.locked::after {
+            content: "🔒";
+            font-size: 14px;
+            position: absolute;
+            bottom: -5px;
+            right: -5px;
+        }
+        .notification {
+            position: absolute;
+            top: 170px;
+            left: 20px;
+            background: linear-gradient(135deg, rgba(0, 0, 0, 0.7) 0%, rgba(30, 30, 50, 0.7) 100%);
+            color: white;
+            padding: 10px 15px;
+            border-radius: 10px;
+            font-size: 16px;
+            opacity: 0;
+            transform: translateX(-20px);
+            transition: all 0.3s ease;
+            border-left: 4px solid #00ffff;
+            max-width: 300px;
+            backdrop-filter: blur(5px);
+        }
+        .notification.show {
+            opacity: 1;
+            transform: translateX(0);
+        }
+        .notification.success {
+            border-left-color: #00ff00;
+        }
+        .notification.warning {
+            border-left-color: #ffcc00;
+        }
+        .notification.error {
+            border-left-color: #ff0000;
         }
     </style>
 </head>
 <body>
-    <h1>Click the Target Game</h1>
-    <div id="score">Score: 0</div>
-    <div id="gameArea">
-        <div id="target"></div>
+    <div id="gameContainer">
+        <canvas id="gameCanvas"></canvas>
+        <div id="ui">
+            <div id="crosshair">+</div>
+            <div id="scoreContainer" class="ui-container">Score: <span id="score">0</span></div>
+            <div id="timerContainer" class="ui-container">Time: <span id="timer">60</span>s</div>
+            <div id="waveContainer" class="ui-container">Wave: <span id="wave">1</span></div>
+            <div id="moneyContainer" class="ui-container">$<span id="money">0</span></div>
+            <div id="waveMessage">Wave <span id="waveNumber">1</span> Complete!<br>Get Ready...</div>
+            <div id="healthContainer" class="ui-container">
+                Health: <span id="healthValue">100</span>
+                <div id="healthBar">
+                    <div id="healthFill"></div>
+                </div>
+            </div>
+            <div id="damageOverlay"></div>
+            <div id="shopContainer">
+                <div id="shopTitle">Upgrade Shop</div>
+                <div id="shopMoney">Available Money: $<span id="shopMoneyValue">0</span></div>
+                
+                <div class="shopItem" id="healthUpgrade">
+                    <div class="shopItemInfo">
+                        <div class="shopItemName">Health Upgrade</div>
+                        <div class="shopItemDesc">+25 HP to maximum health</div>
+                        <div class="shopItemLevel">
+                            <div class="levelDot filled"></div>
+                            <div class="levelDot"></div>
+                            <div class="levelDot"></div>
+                            <div class="levelDot"></div>
+                            <div class="levelDot"></div>
+                        </div>
+                    </div>
+                    <div class="shopItemCost">$50</div>
+                </div>
+                
+                <div class="shopItem" id="speedUpgrade">
+                    <div class="shopItemInfo">
+                        <div class="shopItemName">Speed Upgrade</div>
+                        <div class="shopItemDesc">+20% movement speed</div>
+                        <div class="shopItemLevel">
+                            <div class="levelDot filled"></div>
+                            <div class="levelDot"></div>
+                            <div class="levelDot"></div>
+                            <div class="levelDot"></div>
+                            <div class="levelDot"></div>
+                        </div>
+                    </div>
+                    <div class="shopItemCost">$75</div>
+                </div>
+                
+                <div class="shopItem" id="damageUpgrade">
+                    <div class="shopItemInfo">
+                        <div class="shopItemName">Damage Upgrade</div>
+                        <div class="shopItemDesc">+50% damage multiplier</div>
+                        <div class="shopItemLevel">
+                            <div class="levelDot filled"></div>
+                            <div class="levelDot"></div>
+                            <div class="levelDot"></div>
+                            <div class="levelDot"></div>
+                            <div class="levelDot"></div>
+                        </div>
+                    </div>
+                    <div class="shopItemCost">$100</div>
+                </div>
+                
+                <button id="continueButton">Continue to Next Wave</button>
+            </div>
+            <div id="weaponContainer">
+                <div id="weaponName">Weapon: Pistol</div>
+                <div id="weaponStats">Stats: Damage: 1 | Fire Rate: 2</div>
+                <div class="weapon-selector">
+                    <div class="weapon-option active" data-weapon="0">🔫</div>
+                    <div class="weapon-option locked" data-weapon="1">🔫</div>
+                    <div class="weapon-option locked" data-weapon="2">🔫</div>
+                    <div class="weapon-option locked" data-weapon="3">🔫</div>
+                </div>
+            </div>
+            <div id="notification" class="notification">Upgrade purchased!</div>
+            <div id="gameOverScreen">
+                <div>Game Over!</div>
+                <div>Final Score: <span id="finalScore">0</span></div>
+                <button id="restartButton" class="game-button">Play Again</button>
+            </div>
+            <div id="startScreen">
+                <div id="gameTitle">Toy Soldier Shootout</div>
+                <button id="startButton" class="game-button">Start Game</button>
+                <button id="settingsButton">Settings</button>
+                <div id="pointerLockMessage">Click anywhere on the screen after pressing Start</div>
+                <div id="instructions">
+                    <p>You're a toy soldier in a child's bedroom. Shoot as many toy ducks as possible!</p>
+                    <p>Controls: WASD to move, Mouse to aim, Left-click to shoot</p>
+                    <p>Switch weapons with mouse wheel or number keys (1-4)</p>
+                    <p>Defeat all ducks to advance to the next wave. Each wave brings more ducks!</p>
+                    <p>Earn money for each duck you kill. Between waves, spend your money on upgrades!</p>
+                    <p>Unlock powerful new weapons in the shop to defeat more ducks!</p>
+                    <p>Your health is restored between waves. How many waves can you survive?</p>
+                </div>
+            </div>
+            
+            <div id="settingsMenu">
+                <div id="settingsTitle">Settings</div>
+                <div class="settings-container">
+                    <div class="setting-item">
+                        <div class="setting-label">
+                            <span>Mouse Sensitivity</span>
+                            <span class="setting-value" id="sensitivityValue">5</span>
+                        </div>
+                        <input type="range" min="1" max="10" value="5" class="setting-slider" id="sensitivitySlider">
+                    </div>
+                    
+                    <div class="setting-item">
+                        <div class="setting-label">
+                            <span>Graphics Quality</span>
+                        </div>
+                        <div class="graphics-options">
+                            <div class="graphics-option" data-quality="low">Low</div>
+                            <div class="graphics-option active" data-quality="medium">Medium</div>
+                            <div class="graphics-option" data-quality="high">High</div>
+                        </div>
+                    </div>
+                </div>
+                <button id="backButton">Back to Menu</button>
+            </div>
+        </div>
     </div>
-    <button id="startButton">Start Game</button>
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script>
-        const target = document.getElementById('target');
-        const gameArea = document.getElementById('gameArea');
-        const scoreElement = document.getElementById('score');
-        const startButton = document.getElementById('startButton');
-        let score = 0;
+        // Game state
+        const gameState = {
+            score: 0,
+            timeRemaining: 60,
+            isGameActive: false,
+            isGameOver: false,
+            playerHealth: 100,
+            maxHealth: 100,
+            money: 0,
+            currentWave: 1,
+            ducksPerWave: 5, // Starting number of ducks
+            damageMultiplier: 1.0, // Damage multiplier for player's shots
+            pointerLockSupported: 'pointerLockElement' in document || 
+                                 'mozPointerLockElement' in document || 
+                                 'webkitPointerLockElement' in document,
+            currentWeapon: 0, // Index of current weapon
+            upgradeLevels: {
+                health: 1,
+                speed: 1,
+                damage: 1
+            },
+            maxUpgradeLevel: 5, // Maximum level for each upgrade
+            settings: {
+                sensitivity: 5, // Default sensitivity (1-10)
+                graphicsQuality: 'medium' // Default graphics quality (low, medium, high)
+            },
+            weapons: [
+                {
+                    name: "Pistol",
+                    damage: 1,
+                    fireRate: 500, // ms between shots
+                    bulletSpeed: 0.5,
+                    bulletSize: 0.05,
+                    bulletColor: 0xffcc00,
+                    bulletLifetime: 1000, // ms
+                    sound: "https://assets.codepen.io/21542/pistol-shot.mp3",
+                    model: null,
+                    lastFired: 0,
+                    emoji: "🔫"
+                },
+                {
+                    name: "Shotgun",
+                    damage: 0.7,
+                    fireRate: 800,
+                    bulletCount: 5, // Number of bullets per shot
+                    bulletSpread: 0.1, // Spread of bullets
+                    bulletSpeed: 0.4,
+                    bulletSize: 0.03,
+                    bulletColor: 0xff6600,
+                    bulletLifetime: 800,
+                    sound: "https://assets.codepen.io/21542/shotgun.mp3",
+                    model: null,
+                    lastFired: 0,
+                    cost: 200,
+                    emoji: "🔫"
+                },
+                {
+                    name: "Rifle",
+                    damage: 1.5,
+                    fireRate: 300,
+                    bulletSpeed: 0.7,
+                    bulletSize: 0.04,
+                    bulletColor: 0x00ffff,
+                    bulletLifetime: 1500,
+                    sound: "https://assets.codepen.io/21542/rifle.mp3",
+                    model: null,
+                    lastFired: 0,
+                    cost: 350,
+                    emoji: "🔫"
+                },
+                {
+                    name: "Laser Gun",
+                    damage: 2.5,
+                    fireRate: 200,
+                    bulletSpeed: 1.0,
+                    bulletSize: 0.06,
+                    bulletColor: 0xff00ff,
+                    bulletLifetime: 2000,
+                    sound: "https://assets.codepen.io/21542/laser.mp3",
+                    model: null,
+                    lastFired: 0,
+                    cost: 500,
+                    emoji: "🔫"
+                }
+            ]
+        };
+
+        // Upgrade costs
+        const upgradeCosts = {
+            health: 50,
+            speed: 75,
+            damage: 100
+        };
+        
+        // Upgrade scaling factors
+        const upgradeScaling = {
+            health: 1.5, // Cost increases by 50% per level
+            speed: 1.5,
+            damage: 1.5
+        };
+        
+        // Sounds
+        const sounds = {
+            shoot: new Audio("https://assets.codepen.io/21542/pistol-shot.mp3"),
+            hit: new Audio("https://assets.codepen.io/21542/rubber-duck-squeak.mp3"),
+            gameOver: new Audio("https://assets.codepen.io/21542/game-over.mp3"),
+            playerHit: new Audio("https://assets.codepen.io/21542/player-hit.mp3"),
+            shotgun: new Audio("https://assets.codepen.io/21542/shotgun.mp3"),
+            rifle: new Audio("https://assets.codepen.io/21542/rifle.mp3"),
+            laser: new Audio("https://assets.codepen.io/21542/laser.mp3")
+        };
+        
+        // Fallbacks for sounds
+        sounds.shotgun.onerror = function() { sounds.shotgun = sounds.shoot; };
+        sounds.rifle.onerror = function() { sounds.rifle = sounds.shoot; };
+        sounds.laser.onerror = function() { sounds.laser = sounds.shoot; };
+
+        // Initialize Three.js
+        let scene, camera, renderer, controls, raycaster;
+        let clock = new THREE.Clock();
+        let player = { 
+            height: 1.8, 
+            speed: 5.0, 
+            turnSpeed: 2.0,
+            mouseSensitivity: 1.0, // Base value, will be multiplied by settings.sensitivity
+            lookDirection: new THREE.Vector3(0, 0, -1)
+        };
+        let keyboard = {};
+        let ducks = [];
+        let bullets = [];
         let gameInterval;
-        let isGameRunning = false;
+        let textureLoader = new THREE.TextureLoader();
+        let textures = {};
 
-        function moveTarget() {
-            const maxX = gameArea.clientWidth - target.clientWidth;
-            const maxY = gameArea.clientHeight - target.clientHeight;
-            
-            const randomX = Math.floor(Math.random() * maxX);
-            const randomY = Math.floor(Math.random() * maxY);
-            
-            target.style.left = randomX + 'px';
-            target.style.top = randomY + 'px';
+        // Preload textures - now just initializes an empty object since we're using a cartoony style
+        function preloadTextures() {
+            // We're not using textures for the cartoony style
+            textures = {};
         }
 
+        // DOM elements
+        const scoreElement = document.getElementById('score');
+        const timerElement = document.getElementById('timer');
+        const finalScoreElement = document.getElementById('finalScore');
+        const gameOverScreen = document.getElementById('gameOverScreen');
+        const startScreen = document.getElementById('startScreen');
+        const startButton = document.getElementById('startButton');
+        const restartButton = document.getElementById('restartButton');
+        const canvas = document.getElementById('gameCanvas');
+        const pointerLockMessage = document.getElementById('pointerLockMessage');
+        const healthValueElement = document.getElementById('healthValue');
+        const healthFillElement = document.getElementById('healthFill');
+        const damageOverlay = document.getElementById('damageOverlay');
+        const waveElement = document.getElementById('wave');
+        const waveMessageElement = document.getElementById('waveMessage');
+        const waveNumberElement = document.getElementById('waveNumber');
+        const moneyElement = document.getElementById('money');
+        const shopContainer = document.getElementById('shopContainer');
+        const shopMoneyValue = document.getElementById('shopMoneyValue');
+        const healthUpgrade = document.getElementById('healthUpgrade');
+        const speedUpgrade = document.getElementById('speedUpgrade');
+        const damageUpgrade = document.getElementById('damageUpgrade');
+        const continueButton = document.getElementById('continueButton');
+        const weaponContainer = document.getElementById('weaponContainer');
+        const weaponName = document.getElementById('weaponName');
+        const weaponStats = document.getElementById('weaponStats');
+        const notificationElement = document.getElementById('notification');
+        const weaponOptions = document.querySelectorAll('.weapon-option');
+        const settingsButton = document.getElementById('settingsButton');
+        const settingsMenu = document.getElementById('settingsMenu');
+        const backButton = document.getElementById('backButton');
+        const sensitivitySlider = document.getElementById('sensitivitySlider');
+        const sensitivityValue = document.getElementById('sensitivityValue');
+        const graphicsOptions = document.querySelectorAll('.graphics-option');
+
+        // Initialize the game
+        function init() {
+            // Create scene
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x87CEEB); // Sky blue background
+            
+            // Remove fog for cartoony style
+            // scene.fog = new THREE.FogExp2(0x87CEEB, 0.01);
+
+            // Create camera
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            camera.position.set(0, player.height, 0);
+            
+            // Set up camera rotation
+            camera.rotation.order = 'YXZ'; // Important for FPS camera
+            
+            // Create renderer
+            renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.shadowMap.enabled = true;
+            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+            // Apply graphics settings based on quality setting
+            applyGraphicsSettings();
+
+            // Create raycaster for shooting
+            raycaster = new THREE.Raycaster();
+
+            // Preload textures
+            preloadTextures();
+
+            // Add lights
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
+            scene.add(ambientLight);
+
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 1.0);
+            directionalLight.position.set(5, 10, 7);
+            directionalLight.castShadow = true;
+            directionalLight.shadow.mapSize.width = 512; // Lower resolution for cartoony look
+            directionalLight.shadow.mapSize.height = 512;
+            directionalLight.shadow.camera.near = 0.5;
+            directionalLight.shadow.camera.far = 50;
+            directionalLight.shadow.camera.left = -20;
+            directionalLight.shadow.camera.right = 20;
+            directionalLight.shadow.camera.top = 20;
+            directionalLight.shadow.camera.bottom = -20;
+            scene.add(directionalLight);
+            
+            // Add colorful point lights for cartoony ambiance
+            const pointLight1 = new THREE.PointLight(0xff55ff, 1, 20); // Bright pink
+            pointLight1.position.set(0, 8, 0);
+            pointLight1.castShadow = false; // Disable shadows for better performance
+            scene.add(pointLight1);
+            
+            const pointLight2 = new THREE.PointLight(0x55ffff, 1, 15); // Bright cyan
+            pointLight2.position.set(-8, 5, -8);
+            pointLight2.castShadow = false;
+            scene.add(pointLight2);
+            
+            const pointLight3 = new THREE.PointLight(0xffff55, 1, 15); // Bright yellow
+            pointLight3.position.set(8, 5, 8);
+            pointLight3.castShadow = false;
+            scene.add(pointLight3);
+
+            // Create bedroom environment
+            createBedroom();
+
+            // Create ducks for first wave
+            createDucks(gameState.ducksPerWave);
+
+            // Create weapon models
+            createWeaponModels();
+            
+            // Update weapon display
+            updateWeaponDisplay();
+
+            // Event listeners
+            window.addEventListener('resize', onWindowResize);
+            document.addEventListener('keydown', onKeyDown);
+            document.addEventListener('keyup', onKeyUp);
+            document.addEventListener('mousedown', onMouseDown);
+            document.addEventListener('mousemove', onMouseMove);
+            document.addEventListener('wheel', onMouseWheel);
+            document.addEventListener('pointerlockchange', onPointerLockChange);
+            document.addEventListener('mozpointerlockchange', onPointerLockChange);
+            document.addEventListener('webkitpointerlockchange', onPointerLockChange);
+
+            // Start button event
+            startButton.addEventListener('click', startGame);
+            restartButton.addEventListener('click', restartGame);
+            
+            // Shop button events
+            healthUpgrade.addEventListener('click', () => purchaseUpgrade('health'));
+            speedUpgrade.addEventListener('click', () => purchaseUpgrade('speed'));
+            damageUpgrade.addEventListener('click', () => purchaseUpgrade('damage'));
+            continueButton.addEventListener('click', continueToNextWave);
+            
+            // Canvas click event for pointer lock fallback
+            canvas.addEventListener('click', requestPointerLockFallback);
+
+            // Check if pointer lock is supported
+            if (!gameState.pointerLockSupported) {
+                pointerLockMessage.textContent = "Pointer lock not supported in your browser. Game may not work correctly.";
+                pointerLockMessage.style.display = "block";
+            } else {
+                pointerLockMessage.style.display = "block";
+            }
+
+            // Start animation loop
+            animate();
+        }
+
+        // Create bedroom environment
+        function createBedroom() {
+            // Floor
+            const floorGeometry = new THREE.PlaneGeometry(20, 20);
+            const floorMaterial = new THREE.MeshBasicMaterial({ 
+                color: 0x4169E1, // Royal blue
+                side: THREE.DoubleSide
+            });
+            const floor = new THREE.Mesh(floorGeometry, floorMaterial);
+            floor.rotation.x = Math.PI / 2;
+            floor.receiveShadow = true;
+            scene.add(floor);
+            
+            // Walls
+            const wallMaterial = new THREE.MeshBasicMaterial({ 
+                color: 0xFFC0CB // Pink walls
+            });
+
+            // Back wall
+            const backWallGeometry = new THREE.PlaneGeometry(20, 10);
+            const backWall = new THREE.Mesh(backWallGeometry, wallMaterial);
+            backWall.position.z = -10;
+            backWall.position.y = 5;
+            backWall.receiveShadow = true;
+            scene.add(backWall);
+
+            // Left wall
+            const leftWallGeometry = new THREE.PlaneGeometry(20, 10);
+            const leftWall = new THREE.Mesh(leftWallGeometry, wallMaterial);
+            leftWall.position.x = -10;
+            leftWall.position.y = 5;
+            leftWall.rotation.y = Math.PI / 2;
+            leftWall.receiveShadow = true;
+            scene.add(leftWall);
+
+            // Right wall
+            const rightWallGeometry = new THREE.PlaneGeometry(20, 10);
+            const rightWall = new THREE.Mesh(rightWallGeometry, wallMaterial);
+            rightWall.position.x = 10;
+            rightWall.position.y = 5;
+            rightWall.rotation.y = -Math.PI / 2;
+            rightWall.receiveShadow = true;
+            scene.add(rightWall);
+
+            // Front wall
+            const frontWallGeometry = new THREE.PlaneGeometry(20, 10);
+            const frontWall = new THREE.Mesh(frontWallGeometry, wallMaterial);
+            frontWall.position.z = 10;
+            frontWall.position.y = 5;
+            frontWall.rotation.y = Math.PI;
+            frontWall.receiveShadow = true;
+            scene.add(frontWall);
+
+            // Ceiling
+            const ceilingGeometry = new THREE.PlaneGeometry(20, 20);
+            const ceilingMaterial = new THREE.MeshBasicMaterial({ 
+                color: 0xFFFFFF, // White ceiling
+                side: THREE.DoubleSide
+            });
+            const ceiling = new THREE.Mesh(ceilingGeometry, ceilingMaterial);
+            ceiling.position.y = 10;
+            ceiling.rotation.x = Math.PI / 2;
+            ceiling.receiveShadow = true;
+            scene.add(ceiling);
+
+            // Bed
+            createBed();
+            
+            // Desk
+            createDesk();
+            
+            // Shelf
+            createShelf();
+            
+            // Toy box
+            createToyBox();
+            
+            // Add some decorations
+            addDecorations();
+        }
+
+        // Create a detailed bed
+        function createBed() {
+            // Bed frame
+            const bedFrameGeometry = new THREE.BoxGeometry(6, 1, 8);
+            const bedFrameMaterial = new THREE.MeshBasicMaterial({ 
+                color: 0x8B4513 // Brown
+            });
+            const bedFrame = new THREE.Mesh(bedFrameGeometry, bedFrameMaterial);
+            bedFrame.position.set(-6, 0.5, 0);
+            bedFrame.castShadow = true;
+            bedFrame.receiveShadow = true;
+            scene.add(bedFrame);
+            
+            // Mattress
+            const mattressGeometry = new THREE.BoxGeometry(5.5, 0.8, 7.5);
+            const mattressMaterial = new THREE.MeshBasicMaterial({ 
+                color: 0xFFFFFF // White
+            });
+            const mattress = new THREE.Mesh(mattressGeometry, mattressMaterial);
+            mattress.position.set(-6, 1.4, 0);
+            mattress.castShadow = true;
+            mattress.receiveShadow = true;
+            scene.add(mattress);
+            
+            // Pillow
+            const pillowGeometry = new THREE.BoxGeometry(1.5, 0.4, 2.5);
+            const pillowMaterial = new THREE.MeshBasicMaterial({ 
+                color: 0xE0E0FF // Light blue
+            });
+            const pillow = new THREE.Mesh(pillowGeometry, pillowMaterial);
+            pillow.position.set(-7.5, 1.9, 0);
+            pillow.castShadow = true;
+            pillow.receiveShadow = true;
+            scene.add(pillow);
+            
+            // Blanket
+            const blanketGeometry = new THREE.BoxGeometry(5, 0.2, 4);
+            const blanketMaterial = new THREE.MeshBasicMaterial({ 
+                color: 0x4169E1 // Royal blue
+            });
+            const blanket = new THREE.Mesh(blanketGeometry, blanketMaterial);
+            blanket.position.set(-6, 1.9, 1.5);
+            blanket.castShadow = true;
+            blanket.receiveShadow = true;
+            scene.add(blanket);
+        }
+
+        // Create a detailed desk
+        function createDesk() {
+            // Desk top
+            const deskTopGeometry = new THREE.BoxGeometry(4, 0.2, 2);
+            const deskMaterial = new THREE.MeshBasicMaterial({ 
+                color: 0x8B4513 // Brown
+            });
+            const deskTop = new THREE.Mesh(deskTopGeometry, deskMaterial);
+            deskTop.position.set(7, 2, -8);
+            deskTop.castShadow = true;
+            deskTop.receiveShadow = true;
+            scene.add(deskTop);
+            
+            // Desk legs
+            const legGeometry = new THREE.BoxGeometry(0.2, 2, 0.2);
+            
+            const leg1 = new THREE.Mesh(legGeometry, deskMaterial);
+            leg1.position.set(5.1, 1, -7.1);
+            leg1.castShadow = true;
+            leg1.receiveShadow = true;
+            scene.add(leg1);
+            
+            const leg2 = new THREE.Mesh(legGeometry, deskMaterial);
+            leg2.position.set(8.9, 1, -7.1);
+            leg2.castShadow = true;
+            leg2.receiveShadow = true;
+            scene.add(leg2);
+            
+            const leg3 = new THREE.Mesh(legGeometry, deskMaterial);
+            leg3.position.set(5.1, 1, -8.9);
+            leg3.castShadow = true;
+            leg3.receiveShadow = true;
+            scene.add(leg3);
+            
+            const leg4 = new THREE.Mesh(legGeometry, deskMaterial);
+            leg4.position.set(8.9, 1, -8.9);
+            leg4.castShadow = true;
+            leg4.receiveShadow = true;
+            scene.add(leg4);
+            
+            // Add a lamp on the desk
+            const lampBaseGeometry = new THREE.CylinderGeometry(0.2, 0.3, 0.1, 8);
+            const lampBaseMaterial = new THREE.MeshBasicMaterial({ 
+                color: 0x333333 // Dark gray
+            });
+            const lampBase = new THREE.Mesh(lampBaseGeometry, lampBaseMaterial);
+            lampBase.position.set(8, 2.05, -8.5);
+            lampBase.castShadow = true;
+            lampBase.receiveShadow = true;
+            scene.add(lampBase);
+            
+            const lampPoleGeometry = new THREE.CylinderGeometry(0.05, 0.05, 1, 8);
+            const lampPoleMaterial = new THREE.MeshBasicMaterial({ 
+                color: 0x777777 // Gray
+            });
+            const lampPole = new THREE.Mesh(lampPoleGeometry, lampPoleMaterial);
+            lampPole.position.set(8, 2.6, -8.5);
+            lampPole.castShadow = true;
+            lampPole.receiveShadow = true;
+            scene.add(lampPole);
+            
+            const lampShadeGeometry = new THREE.ConeGeometry(0.3, 0.5, 8, 1, true);
+            const lampShadeMaterial = new THREE.MeshBasicMaterial({ 
+                color: 0xFFFF77, // Yellow
+                side: THREE.DoubleSide
+            });
+            const lampShade = new THREE.Mesh(lampShadeGeometry, lampShadeMaterial);
+            lampShade.position.set(8, 3.1, -8.5);
+            lampShade.castShadow = true;
+            lampShade.receiveShadow = true;
+            scene.add(lampShade);
+            
+            // Add a desk lamp light
+            const lampLight = new THREE.PointLight(0xFFFF77, 0.8, 5);
+            lampLight.position.set(8, 3, -8.5);
+            lampLight.castShadow = true;
+            scene.add(lampLight);
+        }
+
+        // Create a detailed shelf
+        function createShelf() {
+            const shelfGeometry = new THREE.BoxGeometry(8, 0.3, 1.5);
+            const shelfMaterial = new THREE.MeshBasicMaterial({ 
+                color: 0x8B4513 // Brown
+            });
+            const shelf = new THREE.Mesh(shelfGeometry, shelfMaterial);
+            shelf.position.set(0, 6, -9.25);
+            shelf.castShadow = true;
+            shelf.receiveShadow = true;
+            scene.add(shelf);
+            
+            // Add some books on the shelf
+            const bookColors = [0xFF0000, 0x00FF00, 0x0000FF, 0xFFFF00, 0xFF00FF, 0x00FFFF];
+            
+            for (let i = 0; i < 6; i++) {
+                const bookGeometry = new THREE.BoxGeometry(0.3, 0.8, 1);
+                const bookMaterial = new THREE.MeshBasicMaterial({ 
+                    color: bookColors[i]
+                });
+                const book = new THREE.Mesh(bookGeometry, bookMaterial);
+                book.position.set(-3 + i, 6.5, -9);
+                book.castShadow = true;
+                book.receiveShadow = true;
+                scene.add(book);
+            }
+        }
+
+        // Create a detailed toy box
+        function createToyBox() {
+            const toyBoxGeometry = new THREE.BoxGeometry(3, 2, 3);
+            const toyBoxMaterial = new THREE.MeshBasicMaterial({ 
+                color: 0x00AA00 // Green
+            });
+            const toyBox = new THREE.Mesh(toyBoxGeometry, toyBoxMaterial);
+            toyBox.position.set(8, 1, 5);
+            toyBox.castShadow = true;
+            toyBox.receiveShadow = true;
+            scene.add(toyBox);
+            
+            // Add a lid
+            const lidGeometry = new THREE.BoxGeometry(3.2, 0.2, 3.2);
+            const lidMaterial = new THREE.MeshBasicMaterial({ 
+                color: 0x00CC00 // Lighter green
+            });
+            const lid = new THREE.Mesh(lidGeometry, lidMaterial);
+            lid.position.set(8, 2.1, 5);
+            lid.castShadow = true;
+            lid.receiveShadow = true;
+            scene.add(lid);
+            
+            // Add some details to the toy box
+            const handleGeometry = new THREE.CylinderGeometry(0.1, 0.1, 1, 8);
+            const handleMaterial = new THREE.MeshBasicMaterial({ 
+                color: 0xFFD700 // Gold
+            });
+            const handle = new THREE.Mesh(handleGeometry, handleMaterial);
+            handle.position.set(8, 2.2, 3.6);
+            handle.rotation.x = Math.PI / 2;
+            handle.castShadow = true;
+            handle.receiveShadow = true;
+            scene.add(handle);
+        }
+
+        // Add decorations to the room
+        function addDecorations() {
+            // Add a rug
+            const rugGeometry = new THREE.CircleGeometry(3, 16);
+            const rugMaterial = new THREE.MeshBasicMaterial({ 
+                color: 0xFF6347, // Tomato red
+                side: THREE.DoubleSide
+            });
+            const rug = new THREE.Mesh(rugGeometry, rugMaterial);
+            rug.position.set(0, 0.01, 0);
+            rug.rotation.x = -Math.PI / 2;
+            rug.receiveShadow = true;
+            scene.add(rug);
+            
+            // Add a window on the back wall
+            const windowFrameGeometry = new THREE.BoxGeometry(3, 4, 0.2);
+            const windowFrameMaterial = new THREE.MeshBasicMaterial({ 
+                color: 0xFFFFFF // White
+            });
+            const windowFrame = new THREE.Mesh(windowFrameGeometry, windowFrameMaterial);
+            windowFrame.position.set(0, 5, -9.9);
+            windowFrame.castShadow = true;
+            windowFrame.receiveShadow = true;
+            scene.add(windowFrame);
+            
+            const windowGlassGeometry = new THREE.PlaneGeometry(2.8, 3.8);
+            const windowGlassMaterial = new THREE.MeshBasicMaterial({ 
+                color: 0x88CCFF, // Light blue
+                transparent: true,
+                opacity: 0.7
+            });
+            const windowGlass = new THREE.Mesh(windowGlassGeometry, windowGlassMaterial);
+            windowGlass.position.set(0, 5, -9.8);
+            windowGlass.receiveShadow = true;
+            scene.add(windowGlass);
+            
+            // Add a picture frame on the left wall
+            const pictureFrameGeometry = new THREE.BoxGeometry(0.1, 2, 2);
+            const pictureFrameMaterial = new THREE.MeshBasicMaterial({ 
+                color: 0x8B4513 // Brown
+            });
+            const pictureFrame = new THREE.Mesh(pictureFrameGeometry, pictureFrameMaterial);
+            pictureFrame.position.set(-9.9, 5, -5);
+            pictureFrame.castShadow = true;
+            pictureFrame.receiveShadow = true;
+            scene.add(pictureFrame);
+            
+            const pictureGeometry = new THREE.PlaneGeometry(1.8, 1.8);
+            const pictureMaterial = new THREE.MeshBasicMaterial({ 
+                color: 0xFFFFFF // White
+            });
+            const picture = new THREE.Mesh(pictureGeometry, pictureMaterial);
+            picture.position.set(-9.8, 5, -5);
+            picture.rotation.y = Math.PI / 2;
+            picture.receiveShadow = true;
+            scene.add(picture);
+        }
+
+        // Create toy ducks
+        function createDucks(count) {
+            // Create duck materials with bright colors
+            const duckBodyMaterial = new THREE.MeshBasicMaterial({ 
+                color: 0xFFFF00 // Bright yellow
+            });
+            
+            const duckBeakMaterial = new THREE.MeshBasicMaterial({ 
+                color: 0xFF6600 // Orange beak
+            });
+            
+            const duckEyeMaterial = new THREE.MeshBasicMaterial({ 
+                color: 0x000000 // Black eyes
+            });
+            
+            const duckFeetMaterial = new THREE.MeshBasicMaterial({ 
+                color: 0xFF6600 // Orange feet
+            });
+
+            for (let i = 0; i < count; i++) {
+                // Create duck group
+                const duckGroup = new THREE.Group();
+                
+                // Create duck body
+                const bodyGeometry = new THREE.SphereGeometry(0.5, 8, 8);
+                const duckBody = new THREE.Mesh(bodyGeometry, duckBodyMaterial.clone());
+                duckGroup.add(duckBody);
+                
+                // Create duck head
+                const headGeometry = new THREE.SphereGeometry(0.3, 8, 8);
+                const head = new THREE.Mesh(headGeometry, duckBodyMaterial.clone());
+                head.position.set(0.5, 0.2, 0);
+                duckGroup.add(head);
+                
+                // Create duck beak
+                const beakGeometry = new THREE.ConeGeometry(0.15, 0.4, 4);
+                const beak = new THREE.Mesh(beakGeometry, duckBeakMaterial);
+                beak.position.set(0.8, 0.2, 0);
+                beak.rotation.z = -Math.PI / 2;
+                duckGroup.add(beak);
+                
+                // Create duck eyes
+                const eyeGeometry = new THREE.SphereGeometry(0.05, 4, 4);
+                
+                const leftEye = new THREE.Mesh(eyeGeometry, duckEyeMaterial);
+                leftEye.position.set(0.6, 0.3, 0.15);
+                duckGroup.add(leftEye);
+                
+                const rightEye = new THREE.Mesh(eyeGeometry, duckEyeMaterial);
+                rightEye.position.set(0.6, 0.3, -0.15);
+                duckGroup.add(rightEye);
+                
+                // Create duck feet
+                const footGeometry = new THREE.BoxGeometry(0.3, 0.05, 0.15);
+                
+                const leftFoot = new THREE.Mesh(footGeometry, duckFeetMaterial);
+                leftFoot.position.set(0, -0.5, 0.2);
+                duckGroup.add(leftFoot);
+                
+                const rightFoot = new THREE.Mesh(footGeometry, duckFeetMaterial);
+                rightFoot.position.set(0, -0.5, -0.2);
+                duckGroup.add(rightFoot);
+                
+                // Create duck wings - simplified as boxes
+                const wingGeometry = new THREE.BoxGeometry(0.3, 0.2, 0.1);
+                
+                const leftWing = new THREE.Mesh(wingGeometry, duckBodyMaterial.clone());
+                leftWing.position.set(0, 0, 0.5);
+                duckGroup.add(leftWing);
+                
+                const rightWing = new THREE.Mesh(wingGeometry, duckBodyMaterial.clone());
+                rightWing.position.set(0, 0, -0.5);
+                duckGroup.add(rightWing);
+                
+                // Create duck tail - simplified as a box
+                const tailGeometry = new THREE.BoxGeometry(0.2, 0.2, 0.2);
+                const tail = new THREE.Mesh(tailGeometry, duckBodyMaterial.clone());
+                tail.position.set(-0.5, 0, 0);
+                tail.rotation.z = Math.PI / 4;
+                duckGroup.add(tail);
+
+                // Position duck randomly in the room
+                let x, y, z;
+                const placement = Math.random();
+                
+                if (placement < 0.25) {
+                    // On the floor
+                    x = Math.random() * 16 - 8;
+                    y = 0.5;
+                    z = Math.random() * 16 - 8;
+                } else if (placement < 0.5) {
+                    // On the bed
+                    x = -6 + Math.random() * 4 - 2;
+                    y = 1.75;
+                    z = Math.random() * 6 - 3;
+                } else if (placement < 0.75) {
+                    // On the desk
+                    x = 7 + Math.random() * 2 - 1;
+                    y = 3;
+                    z = -8 + Math.random() * 1 - 0.5;
+                } else {
+                    // On the shelf
+                    x = Math.random() * 6 - 3;
+                    y = 6.5;
+                    z = -9;
+                }
+                
+                duckGroup.position.set(x, y, z);
+                
+                // Add random rotation for variety
+                duckGroup.rotation.y = Math.random() * Math.PI * 2;
+                
+                // Enable shadows for all parts
+                duckGroup.traverse((object) => {
+                    if (object.isMesh) {
+                        object.castShadow = true;
+                        object.receiveShadow = true;
+                    }
+                });
+                
+                // Add to scene and ducks array
+                scene.add(duckGroup);
+                ducks.push({
+                    mesh: duckGroup,
+                    isHit: false,
+                    value: Math.floor(Math.random() * 3) + 1, // Random value between 1-3
+                    attackCooldown: 0,
+                    attackDamage: Math.floor(Math.random() * 5) + 5, // Random damage between 5-10
+                    speed: 0.02 + (Math.random() * 0.03) // Random speed for movement
+                });
+                
+                // Scale duck based on value
+                const scale = 0.8 + (ducks[i].value * 0.2);
+                duckGroup.scale.set(scale, scale, scale);
+            }
+        }
+
+        // Create weapon models
+        function createWeaponModels() {
+            // Pistol
+            const pistolGroup = new THREE.Group();
+            
+            // Pistol barrel
+            const pistolBarrel = new THREE.Mesh(
+                new THREE.BoxGeometry(0.08, 0.08, 0.25),
+                new THREE.MeshBasicMaterial({ color: 0x333333 })
+            );
+            pistolBarrel.position.set(0, -0.02, -0.05);
+            pistolGroup.add(pistolBarrel);
+            
+            // Pistol body
+            const pistolBody = new THREE.Mesh(
+                new THREE.BoxGeometry(0.1, 0.12, 0.15),
+                new THREE.MeshBasicMaterial({ color: 0x222222 })
+            );
+            pistolBody.position.set(0, -0.05, 0.05);
+            pistolGroup.add(pistolBody);
+            
+            // Pistol handle
+            const pistolHandle = new THREE.Mesh(
+                new THREE.BoxGeometry(0.08, 0.2, 0.1),
+                new THREE.MeshBasicMaterial({ color: 0x8B4513 })
+            );
+            pistolHandle.position.set(0, -0.2, 0.08);
+            pistolHandle.rotation.x = 0.3;
+            pistolGroup.add(pistolHandle);
+            
+            // Pistol trigger
+            const pistolTrigger = new THREE.Mesh(
+                new THREE.BoxGeometry(0.02, 0.05, 0.02),
+                new THREE.MeshBasicMaterial({ color: 0x111111 })
+            );
+            pistolTrigger.position.set(0, -0.12, 0.05);
+            pistolGroup.add(pistolTrigger);
+            
+            gameState.weapons[0].model = pistolGroup;
+            
+            // Shotgun
+            const shotgunGroup = new THREE.Group();
+            
+            // Shotgun barrels
+            const shotgunBarrel1 = new THREE.Mesh(
+                new THREE.BoxGeometry(0.05, 0.05, 0.4),
+                new THREE.MeshBasicMaterial({ color: 0x444444 })
+            );
+            shotgunBarrel1.position.set(0.03, -0.02, -0.1);
+            shotgunGroup.add(shotgunBarrel1);
+            
+            const shotgunBarrel2 = new THREE.Mesh(
+                new THREE.BoxGeometry(0.05, 0.05, 0.4),
+                new THREE.MeshBasicMaterial({ color: 0x444444 })
+            );
+            shotgunBarrel2.position.set(-0.03, -0.02, -0.1);
+            shotgunGroup.add(shotgunBarrel2);
+            
+            // Shotgun body
+            const shotgunBody = new THREE.Mesh(
+                new THREE.BoxGeometry(0.12, 0.12, 0.2),
+                new THREE.MeshBasicMaterial({ color: 0x8B4513 })
+            );
+            shotgunBody.position.set(0, -0.05, 0.1);
+            shotgunGroup.add(shotgunBody);
+            
+            // Shotgun handle
+            const shotgunHandle = new THREE.Mesh(
+                new THREE.BoxGeometry(0.08, 0.2, 0.1),
+                new THREE.MeshBasicMaterial({ color: 0x8B4513 })
+            );
+            shotgunHandle.position.set(0, -0.2, 0.15);
+            shotgunHandle.rotation.x = 0.4;
+            shotgunGroup.add(shotgunHandle);
+            
+            // Shotgun pump
+            const shotgunPump = new THREE.Mesh(
+                new THREE.BoxGeometry(0.1, 0.08, 0.12),
+                new THREE.MeshBasicMaterial({ color: 0x8B4513 })
+            );
+            shotgunPump.position.set(0, -0.05, -0.05);
+            shotgunGroup.add(shotgunPump);
+            
+            gameState.weapons[1].model = shotgunGroup;
+            
+            // Rifle
+            const rifleGroup = new THREE.Group();
+            
+            // Rifle barrel
+            const rifleBarrel = new THREE.Mesh(
+                new THREE.BoxGeometry(0.05, 0.05, 0.5),
+                new THREE.MeshBasicMaterial({ color: 0x333333 })
+            );
+            rifleBarrel.position.set(0, -0.02, -0.15);
+            rifleGroup.add(rifleBarrel);
+            
+            // Rifle body
+            const rifleBody = new THREE.Mesh(
+                new THREE.BoxGeometry(0.1, 0.1, 0.3),
+                new THREE.MeshBasicMaterial({ color: 0x666666 })
+            );
+            rifleBody.position.set(0, -0.05, 0.1);
+            rifleGroup.add(rifleBody);
+            
+            // Rifle handle
+            const rifleHandle = new THREE.Mesh(
+                new THREE.BoxGeometry(0.08, 0.2, 0.1),
+                new THREE.MeshBasicMaterial({ color: 0x8B4513 })
+            );
+            rifleHandle.position.set(0, -0.2, 0.15);
+            rifleHandle.rotation.x = 0.3;
+            rifleGroup.add(rifleHandle);
+            
+            // Rifle magazine
+            const rifleMagazine = new THREE.Mesh(
+                new THREE.BoxGeometry(0.06, 0.15, 0.05),
+                new THREE.MeshBasicMaterial({ color: 0x444444 })
+            );
+            rifleMagazine.position.set(0, -0.15, 0.05);
+            rifleGroup.add(rifleMagazine);
+            
+            gameState.weapons[2].model = rifleGroup;
+            
+            // Laser Gun
+            const laserGroup = new THREE.Group();
+            
+            // Laser gun barrel
+            const laserBarrel = new THREE.Mesh(
+                new THREE.BoxGeometry(0.06, 0.06, 0.3),
+                new THREE.MeshBasicMaterial({ 
+                    color: 0x00ffff,
+                    transparent: true,
+                    opacity: 0.8
+                })
+            );
+            laserBarrel.position.set(0, -0.02, -0.1);
+            laserGroup.add(laserBarrel);
+            
+            // Laser gun body
+            const laserBody = new THREE.Mesh(
+                new THREE.BoxGeometry(0.12, 0.12, 0.2),
+                new THREE.MeshBasicMaterial({ color: 0x444444 })
+            );
+            laserBody.position.set(0, -0.05, 0.1);
+            laserGroup.add(laserBody);
+            
+            // Laser gun handle
+            const laserHandle = new THREE.Mesh(
+                new THREE.BoxGeometry(0.08, 0.2, 0.1),
+                new THREE.MeshBasicMaterial({ color: 0x222222 })
+            );
+            laserHandle.position.set(0, -0.2, 0.15);
+            laserHandle.rotation.x = 0.3;
+            laserGroup.add(laserHandle);
+            
+            // Laser gun details - glowing parts
+            const laserDetail = new THREE.Mesh(
+                new THREE.BoxGeometry(0.14, 0.04, 0.04),
+                new THREE.MeshBasicMaterial({ 
+                    color: 0x00ff00,
+                    transparent: true,
+                    opacity: 0.8
+                })
+            );
+            laserDetail.position.set(0, 0.02, 0.1);
+            laserGroup.add(laserDetail);
+            
+            gameState.weapons[3].model = laserGroup;
+        }
+
+        // Update weapon display
+        function updateWeaponDisplay() {
+            const weapon = gameState.weapons[gameState.currentWeapon];
+            weaponName.textContent = `Weapon: ${weapon.name}`;
+            
+            let statsText = `Damage: ${(weapon.damage * gameState.damageMultiplier).toFixed(1)}`;
+            statsText += ` | Fire Rate: ${Math.round(1000 / weapon.fireRate)}`;
+            
+            if (weapon.bulletCount) {
+                statsText += ` | Bullets: ${weapon.bulletCount}`;
+            }
+            
+            weaponStats.textContent = statsText;
+            
+            // Update weapon model in scene
+            updateWeaponModel();
+            
+            // Update weapon selector UI
+            updateWeaponSelector();
+        }
+
+        // Update weapon selector UI
+        function updateWeaponSelector() {
+            weaponOptions.forEach((option, index) => {
+                // Remove active class from all options
+                option.classList.remove('active');
+                
+                // Add locked class if weapon is not unlocked
+                if (index > 0 && !gameState.weapons[index].unlocked) {
+                    option.classList.add('locked');
+                } else {
+                    option.classList.remove('locked');
+                }
+                
+                // Add active class to current weapon
+                if (index === gameState.currentWeapon) {
+                    option.classList.add('active');
+                }
+            });
+        }
+
+        // Update weapon model in scene
+        function updateWeaponModel() {
+            // Remove all weapon models from scene
+            for (let i = 0; i < gameState.weapons.length; i++) {
+                if (gameState.weapons[i].model && gameState.weapons[i].model.parent) {
+                    scene.remove(gameState.weapons[i].model);
+                }
+            }
+            
+            // Add current weapon model to scene
+            const weapon = gameState.weapons[gameState.currentWeapon];
+            if (weapon.model) {
+                scene.add(weapon.model);
+                
+                // Position weapon in front of camera
+                updateWeaponPosition();
+            }
+        }
+
+        // Update weapon position
+        function updateWeaponPosition() {
+            const weapon = gameState.weapons[gameState.currentWeapon];
+            if (weapon.model) {
+                // Get camera direction
+                const direction = new THREE.Vector3();
+                camera.getWorldDirection(direction);
+                
+                // Position weapon in front of camera
+                weapon.model.position.copy(camera.position);
+                weapon.model.position.add(direction.multiplyScalar(0.3));
+                
+                // Adjust position to be in bottom right of view
+                const right = new THREE.Vector3(1, 0, 0).applyQuaternion(camera.quaternion);
+                const up = new THREE.Vector3(0, 1, 0).applyQuaternion(camera.quaternion);
+                
+                weapon.model.position.add(right.multiplyScalar(0.2));
+                weapon.model.position.add(up.multiplyScalar(-0.2));
+                
+                // Make weapon face same direction as camera
+                weapon.model.quaternion.copy(camera.quaternion);
+            }
+        }
+
+        // Handle mouse wheel for weapon switching
+        function onMouseWheel(event) {
+            if (!gameState.isGameActive || gameState.isGameOver) return;
+            
+            // Determine direction
+            const delta = Math.sign(event.deltaY);
+            
+            // Calculate new weapon index
+            let newWeaponIndex = gameState.currentWeapon + delta;
+            
+            // Wrap around
+            if (newWeaponIndex < 0) {
+                newWeaponIndex = 0; // Don't go below 0
+            } else if (newWeaponIndex >= gameState.weapons.length) {
+                newWeaponIndex = gameState.weapons.length - 1; // Don't go above max
+            }
+            
+            // Check if weapon is unlocked
+            if (newWeaponIndex > 0 && !gameState.weapons[newWeaponIndex].unlocked) {
+                // Weapon not unlocked, don't switch
+                return;
+            }
+            
+            // Switch weapon
+            switchWeapon(newWeaponIndex);
+        }
+
+        // Handle key down
+        function onKeyDown(event) {
+            keyboard[event.code] = true;
+            
+            // Weapon switching with number keys
+            if (gameState.isGameActive && !gameState.isGameOver) {
+                if (event.code === 'Digit1') {
+                    switchWeapon(0);
+                } else if (event.code === 'Digit2' && gameState.weapons[1].unlocked) {
+                    switchWeapon(1);
+                } else if (event.code === 'Digit3' && gameState.weapons[2].unlocked) {
+                    switchWeapon(2);
+                } else if (event.code === 'Digit4' && gameState.weapons[3].unlocked) {
+                    switchWeapon(3);
+                }
+            }
+        }
+
+        // Handle key up
+        function onKeyUp(event) {
+            keyboard[event.code] = false;
+        }
+
+        // Handle mouse down (shooting)
+        function onMouseDown(event) {
+            if (!gameState.isGameActive || gameState.isGameOver) {
+                // If game is not active, try to request pointer lock
+                if (startScreen.style.display === 'none') {
+                    requestPointerLockFallback();
+                }
+                return;
+            }
+            
+            if (event.button === 0) { // Left mouse button
+                shoot();
+            }
+        }
+
+        // Handle mouse movement
+        function onMouseMove(event) {
+            if (!gameState.isGameActive || gameState.isGameOver) return;
+            
+            // Check if pointer is locked
+            const isPointerLocked = document.pointerLockElement === canvas || 
+                                   document.mozPointerLockElement === canvas || 
+                                   document.webkitPointerLockElement === canvas;
+            
+            if (!isPointerLocked) return;
+            
+            const movementX = event.movementX || event.mozMovementX || event.webkitMovementX || 0;
+            const movementY = event.movementY || event.mozMovementY || event.webkitMovementY || 0;
+            
+            // Apply sensitivity from player settings
+            const sensitivityX = player.mouseSensitivity * 0.002;
+            const sensitivityY = player.mouseSensitivity * 0.002;
+            
+            // Update camera rotation
+            camera.rotation.y -= movementX * sensitivityX;
+            
+            // Limit vertical rotation to prevent flipping
+            const verticalRotation = camera.rotation.x - movementY * sensitivityY;
+            camera.rotation.x = Math.max(-Math.PI / 2 + 0.01, Math.min(Math.PI / 2 - 0.01, verticalRotation));
+            
+            // Update player look direction for movement
+            player.lookDirection.set(0, 0, -1).applyQuaternion(camera.quaternion);
+            player.lookDirection.y = 0; // Keep on horizontal plane
+            player.lookDirection.normalize();
+        }
+
+        // Handle pointer lock change
+        function onPointerLockChange() {
+            const isPointerLocked = document.pointerLockElement === canvas || 
+                                   document.mozPointerLockElement === canvas || 
+                                   document.webkitPointerLockElement === canvas;
+            
+            if (isPointerLocked) {
+                // Pointer is locked
+                gameState.isGameActive = true;
+            } else if (gameState.isGameActive && !gameState.isGameOver) {
+                // Pointer is unlocked but game is still active
+                // Try to request pointer lock again
+                requestPointerLockFallback();
+            }
+        }
+
+        // Request pointer lock with fallback
+        function requestPointerLockFallback() {
+            if (startScreen.style.display === 'none') {
+                // Try to request pointer lock
+                canvas.requestPointerLock = canvas.requestPointerLock || 
+                                          canvas.mozRequestPointerLock || 
+                                          canvas.webkitRequestPointerLock;
+                
+                if (canvas.requestPointerLock) {
+                    canvas.requestPointerLock();
+                } else {
+                    // Fallback if pointer lock is not supported
+                    gameState.isGameActive = true;
+                    console.log("Pointer lock not supported, using fallback controls");
+                }
+            }
+        }
+
+        // Shooting function
+        function shoot() {
+            if (!gameState.isGameActive || gameState.isGameOver) return;
+            
+            const weapon = gameState.weapons[gameState.currentWeapon];
+            const now = Date.now();
+            
+            // Check fire rate
+            if (now - weapon.lastFired < weapon.fireRate) {
+                return;
+            }
+            
+            // Update last fired time
+            weapon.lastFired = now;
+            
+            // Play shoot sound
+            const weaponSound = sounds[weapon.name.toLowerCase().replace(' ', '')] || sounds.shoot;
+            weaponSound.currentTime = 0;
+            weaponSound.play();
+            
+            // Create direction vector from camera
+            const direction = new THREE.Vector3();
+            camera.getWorldDirection(direction);
+            
+            // Get the weapon model position (gun barrel position)
+            const gunPosition = weapon.model.position.clone();
+            
+            // For shotgun and rifle, adjust the position to be at the end of the barrel
+            if (weapon.name === "Shotgun" || weapon.name === "Rifle" || weapon.name === "Laser Gun") {
+                // Get the forward direction of the gun
+                const gunForward = new THREE.Vector3(0, 0, -1).applyQuaternion(weapon.model.quaternion);
+                // Move the position to the end of the barrel
+                gunPosition.add(gunForward.multiplyScalar(0.3));
+            } else {
+                // For pistol, just move slightly forward
+                const gunForward = new THREE.Vector3(0, 0, -1).applyQuaternion(weapon.model.quaternion);
+                gunPosition.add(gunForward.multiplyScalar(0.2));
+            }
+            
+            // Set raycaster from gun position instead of camera position
+            raycaster.set(gunPosition, direction);
+            
+            // Create bullet(s)
+            if (weapon.bulletCount) {
+                // Shotgun-style multiple bullets
+                for (let i = 0; i < weapon.bulletCount; i++) {
+                    // Create spread direction
+                    const spreadDirection = direction.clone();
+                    
+                    // Add random spread
+                    spreadDirection.x += (Math.random() - 0.5) * weapon.bulletSpread;
+                    spreadDirection.y += (Math.random() - 0.5) * weapon.bulletSpread;
+                    spreadDirection.z += (Math.random() - 0.5) * weapon.bulletSpread;
+                    
+                    // Normalize direction
+                    spreadDirection.normalize();
+                    
+                    // Create bullet from gun position
+                    createBullet(gunPosition.clone(), spreadDirection, weapon);
+                }
+            } else {
+                // Single bullet from gun position
+                createBullet(gunPosition.clone(), direction, weapon);
+            }
+            
+            // Create muzzle flash at gun position
+            createMuzzleFlash(gunPosition, direction, weapon);
+            
+            // Check for intersections with ducks
+            const intersects = raycaster.intersectObjects(scene.children, true);
+            
+            if (intersects.length > 0) {
+                // Find the duck that was hit
+                const hitObject = intersects[0].object;
+                let hitDuck = null;
+                
+                // Find the parent duck if we hit a part of it
+                for (let i = 0; i < ducks.length; i++) {
+                    if (ducks[i].mesh === hitObject || ducks[i].mesh.children.includes(hitObject)) {
+                        hitDuck = ducks[i];
+                        break;
+                    }
+                }
+                
+                if (hitDuck && !hitDuck.isHit) {
+                    // Mark duck as hit
+                    hitDuck.isHit = true;
+                    
+                    // Play hit sound
+                    sounds.hit.currentTime = 0;
+                    sounds.hit.play();
+                    
+                    // Calculate damage based on weapon and multiplier
+                    const damage = weapon.damage * gameState.damageMultiplier;
+                    
+                    // Add score based on duck value and damage
+                    gameState.score += Math.round(hitDuck.value * damage);
+                    scoreElement.textContent = gameState.score;
+                    
+                    // Add money based on duck value (multiplied by damage multiplier)
+                    const moneyEarned = Math.floor(hitDuck.value * 10 * gameState.damageMultiplier);
+                    gameState.money += moneyEarned;
+                    moneyElement.textContent = gameState.money;
+                    
+                    // Visual feedback - change color and make duck fall
+                    hitDuck.mesh.traverse((object) => {
+                        if (object.isMesh && object.material) {
+                            object.material.color.set(0xFF0000); // Change to red
+                        }
+                    });
+                    
+                    // Make duck fall and spin
+                    const fallAnimation = setInterval(() => {
+                        hitDuck.mesh.position.y -= 0.1;
+                        hitDuck.mesh.rotation.z += 0.2;
+                        hitDuck.mesh.rotation.x += 0.1;
+                        
+                        if (hitDuck.mesh.position.y < -2) {
+                            clearInterval(fallAnimation);
+                            scene.remove(hitDuck.mesh);
+                            
+                            // Check if all ducks are hit
+                            checkWaveComplete();
+                        }
+                    }, 30);
+                }
+            }
+        }
+
+        // Create a bullet
+        function createBullet(position, direction, weapon) {
+            // Create bullet geometry and material based on weapon type
+            let bulletGeometry, bulletMaterial;
+            
+            if (weapon.name === "Pistol") {
+                bulletGeometry = new THREE.SphereGeometry(weapon.bulletSize, 8, 8);
+                bulletMaterial = new THREE.MeshBasicMaterial({ 
+                    color: 0xffcc00
+                });
+            } else if (weapon.name === "Shotgun") {
+                bulletGeometry = new THREE.SphereGeometry(weapon.bulletSize, 8, 8);
+                bulletMaterial = new THREE.MeshBasicMaterial({ 
+                    color: 0xff6600
+                });
+            } else if (weapon.name === "Rifle") {
+                bulletGeometry = new THREE.CylinderGeometry(0.01, 0.01, 0.1, 8);
+                bulletMaterial = new THREE.MeshBasicMaterial({ 
+                    color: 0xff9900
+                });
+            } else if (weapon.name === "Laser Gun") {
+                bulletGeometry = new THREE.CylinderGeometry(0.02, 0.02, 0.2, 8);
+                bulletMaterial = new THREE.MeshBasicMaterial({ 
+                    color: 0x00ff00,
+                    transparent: true,
+                    opacity: 0.8
+                });
+            } else {
+                // Default bullet
+                bulletGeometry = new THREE.SphereGeometry(weapon.bulletSize, 8, 8);
+                bulletMaterial = new THREE.MeshBasicMaterial({ color: weapon.bulletColor });
+            }
+            
+            const bulletMesh = new THREE.Mesh(bulletGeometry, bulletMaterial);
+            
+            // Position bullet at gun position
+            bulletMesh.position.copy(position);
+            
+            // Move bullet forward a bit to avoid hitting the player
+            bulletMesh.position.add(direction.clone().multiplyScalar(0.1));
+            
+            // For cylindrical bullets (rifle, laser), rotate to align with direction
+            if (weapon.name === "Rifle" || weapon.name === "Laser Gun") {
+                const axis = new THREE.Vector3(0, 1, 0);
+                bulletMesh.quaternion.setFromUnitVectors(axis, direction.clone().normalize());
+            }
+            
+            // Add a simple point light for glow effect (less intense for cartoony look)
+            let bulletLight;
+            if (weapon.name === "Pistol") {
+                bulletLight = new THREE.PointLight(0xffcc00, 0.3, 1);
+            } else if (weapon.name === "Shotgun") {
+                bulletLight = new THREE.PointLight(0xff6600, 0.4, 1.5);
+            } else if (weapon.name === "Rifle") {
+                bulletLight = new THREE.PointLight(0xff9900, 0.3, 1);
+            } else if (weapon.name === "Laser Gun") {
+                bulletLight = new THREE.PointLight(0x00ff00, 0.5, 2);
+            } else {
+                bulletLight = new THREE.PointLight(weapon.bulletColor, 0.3, 1);
+            }
+            bulletMesh.add(bulletLight);
+            
+            // Add to scene
+            scene.add(bulletMesh);
+            
+            // Add to bullets array
+            bullets.push({
+                mesh: bulletMesh,
+                direction: direction,
+                speed: weapon.bulletSpeed,
+                lifetime: weapon.bulletLifetime,
+                created: Date.now(),
+                weapon: weapon
+            });
+        }
+
+        // Create muzzle flash effect
+        function createMuzzleFlash(position, direction, weapon) {
+            // Create flash geometry and material based on weapon type
+            let flashSize, flashColor;
+            
+            if (weapon.name === "Pistol") {
+                flashSize = 0.1;
+                flashColor = 0xffcc00;
+            } else if (weapon.name === "Shotgun") {
+                flashSize = 0.15;
+                flashColor = 0xff6600;
+            } else if (weapon.name === "Rifle") {
+                flashSize = 0.12;
+                flashColor = 0xff9900;
+            } else if (weapon.name === "Laser Gun") {
+                flashSize = 0.12;
+                flashColor = 0x00ff00;
+            } else {
+                flashSize = 0.1;
+                flashColor = 0xffcc00;
+            }
+            
+            const flashGeometry = new THREE.SphereGeometry(flashSize, 8, 8);
+            const flashMaterial = new THREE.MeshBasicMaterial({ 
+                color: flashColor,
+                transparent: true,
+                opacity: 0.8
+            });
+            
+            const flash = new THREE.Mesh(flashGeometry, flashMaterial);
+            
+            // Position flash at gun position
+            flash.position.copy(position);
+            
+            // Move flash forward a bit
+            flash.position.add(direction.clone().multiplyScalar(0.1));
+            
+            // Add a point light for the flash (less intense for cartoony look)
+            const flashLight = new THREE.PointLight(flashColor, 1, 2);
+            flash.add(flashLight);
+            
+            // Add to scene
+            scene.add(flash);
+            
+            // Remove the flash after a short time
+            setTimeout(() => {
+                scene.remove(flash);
+            }, 100);
+        }
+
+        // Update bullets
+        function updateBullets() {
+            const now = Date.now();
+            
+            for (let i = bullets.length - 1; i >= 0; i--) {
+                const bullet = bullets[i];
+                
+                // Move bullet
+                bullet.mesh.position.add(bullet.direction.clone().multiplyScalar(bullet.speed));
+                
+                // Check if bullet has expired
+                if (now - bullet.created > bullet.lifetime) {
+                    // Remove bullet
+                    scene.remove(bullet.mesh);
+                    bullets.splice(i, 1);
+                    continue;
+                }
+                
+                // Check for collisions with ducks
+                for (let j = 0; j < ducks.length; j++) {
+                    const duck = ducks[j];
+                    
+                    // Skip if duck is already hit
+                    if (duck.isHit) continue;
+                    
+                    // Calculate distance between bullet and duck
+                    const distance = bullet.mesh.position.distanceTo(duck.mesh.position);
+                    
+                    // If distance is less than duck size + bullet size, it's a hit
+                    if (distance < 0.5 + bullet.weapon.bulletSize) {
+                        // Mark duck as hit
+                        duck.isHit = true;
+                        
+                        // Play hit sound
+                        sounds.hit.currentTime = 0;
+                        sounds.hit.play();
+                        
+                        // Calculate damage based on weapon and multiplier
+                        const damage = bullet.weapon.damage * gameState.damageMultiplier;
+                        
+                        // Add score based on duck value and damage
+                        gameState.score += Math.round(duck.value * damage);
+                        scoreElement.textContent = gameState.score;
+                        
+                        // Add money based on duck value (multiplied by damage multiplier)
+                        const moneyEarned = Math.floor(duck.value * 10 * gameState.damageMultiplier);
+                        gameState.money += moneyEarned;
+                        moneyElement.textContent = gameState.money;
+                        
+                        // Visual feedback - change color and make duck fall
+                        if (duck.mesh.material) {
+                            duck.mesh.material.color.set(0xFF0000); // Change to red
+                        }
+                        
+                        // Make duck fall and spin
+                        const fallAnimation = setInterval(() => {
+                            duck.mesh.position.y -= 0.1;
+                            duck.mesh.rotation.z += 0.2;
+                            duck.mesh.rotation.x += 0.1;
+                            
+                            if (duck.mesh.position.y < -2) {
+                                clearInterval(fallAnimation);
+                                scene.remove(duck.mesh);
+                                
+                                // Check if all ducks are hit
+                                checkWaveComplete();
+                            }
+                        }, 30);
+                        
+                        // Remove bullet
+                        scene.remove(bullet.mesh);
+                        bullets.splice(i, 1);
+                        break;
+                    }
+                }
+            }
+        }
+
+        // Check if wave is complete
+        function checkWaveComplete() {
+            let allDucksHit = true;
+            
+            for (let i = 0; i < ducks.length; i++) {
+                if (!ducks[i].isHit) {
+                    allDucksHit = false;
+                    break;
+                }
+            }
+            
+            if (allDucksHit && ducks.length > 0) {
+                openShop();
+            }
+        }
+        
+        // Open shop between waves
+        function openShop() {
+            // Pause game
+            gameState.isGameActive = false;
+            
+            // Exit pointer lock
+            if (document.exitPointerLock) {
+                document.exitPointerLock();
+            } else if (document.mozExitPointerLock) {
+                document.mozExitPointerLock();
+            } else if (document.webkitExitPointerLock) {
+                document.webkitExitPointerLock();
+            }
+            
+            // Update shop money display
+            shopMoneyValue.textContent = gameState.money;
+            
+            // Update shop item states based on available money
+            updateShopItemStates();
+            
+            // Show shop
+            shopContainer.style.display = 'block';
+        }
+        
+        // Update shop item states based on available money
+        function updateShopItemStates() {
+            // Health upgrade
+            updateShopItem('health');
+            
+            // Speed upgrade
+            updateShopItem('speed');
+            
+            // Damage upgrade
+            updateShopItem('damage');
+            
+            // Add weapon upgrades to shop if not unlocked
+            for (let i = 1; i < gameState.weapons.length; i++) {
+                const weapon = gameState.weapons[i];
+                
+                // Skip if already unlocked
+                if (weapon.unlocked) continue;
+                
+                // Check if weapon upgrade element exists
+                let weaponUpgradeElement = document.getElementById(`weapon${i}Upgrade`);
+                
+                if (!weaponUpgradeElement) {
+                    // Create weapon upgrade element
+                    weaponUpgradeElement = document.createElement('div');
+                    weaponUpgradeElement.id = `weapon${i}Upgrade`;
+                    weaponUpgradeElement.className = 'shopItem';
+                    
+                    // Create inner HTML structure
+                    weaponUpgradeElement.innerHTML = `
+                        <div class="shopItemInfo">
+                            <div class="shopItemName">Unlock ${weapon.name}</div>
+                            <div class="shopItemDesc">A powerful new weapon to defeat ducks</div>
+                        </div>
+                        <div class="shopItemCost">$${weapon.cost}</div>
+                    `;
+                    
+                    // Add click event
+                    weaponUpgradeElement.addEventListener('click', () => purchaseWeapon(i));
+                    
+                    // Add to shop before continue button
+                    shopContainer.insertBefore(weaponUpgradeElement, continueButton);
+                }
+                
+                // Update disabled state
+                if (gameState.money >= weapon.cost) {
+                    weaponUpgradeElement.classList.remove('disabled');
+                } else {
+                    weaponUpgradeElement.classList.add('disabled');
+                }
+            }
+        }
+        
+        // Update a single shop item
+        function updateShopItem(type) {
+            const upgradeElement = document.getElementById(`${type}Upgrade`);
+            const currentLevel = gameState.upgradeLevels[type];
+            const maxLevel = gameState.maxUpgradeLevel;
+            
+            // Calculate cost with scaling
+            const baseCost = upgradeCosts[type];
+            const scalingFactor = upgradeScaling[type];
+            const currentCost = Math.round(baseCost * Math.pow(scalingFactor, currentLevel - 1));
+            
+            // Update cost display
+            const costElement = upgradeElement.querySelector('.shopItemCost');
+            if (costElement) {
+                costElement.textContent = currentLevel >= maxLevel ? 'MAXED' : `$${currentCost}`;
+            }
+            
+            // Update level dots
+            const levelDotsContainer = upgradeElement.querySelector('.shopItemLevel');
+            if (levelDotsContainer) {
+                const levelDots = levelDotsContainer.querySelectorAll('.levelDot');
+                levelDots.forEach((dot, index) => {
+                    if (index < currentLevel) {
+                        dot.classList.add('filled');
+                    } else {
+                        dot.classList.remove('filled');
+                    }
+                });
+            }
+            
+            // Check if maxed out
+            if (currentLevel >= maxLevel) {
+                upgradeElement.classList.add('maxed');
+                upgradeElement.classList.add('disabled');
+            } else {
+                upgradeElement.classList.remove('maxed');
+                
+                // Check if can afford
+                if (gameState.money >= currentCost) {
+                    upgradeElement.classList.remove('disabled');
+                } else {
+                    upgradeElement.classList.add('disabled');
+                }
+            }
+        }
+
+        // Purchase upgrade
+        function purchaseUpgrade(type) {
+            const currentLevel = gameState.upgradeLevels[type];
+            const maxLevel = gameState.maxUpgradeLevel;
+            
+            // Check if already at max level
+            if (currentLevel >= maxLevel) {
+                showNotification(`${type.charAt(0).toUpperCase() + type.slice(1)} is already at maximum level!`, 'warning');
+                return;
+            }
+            
+            // Calculate cost with scaling
+            const baseCost = upgradeCosts[type];
+            const scalingFactor = upgradeScaling[type];
+            const currentCost = Math.round(baseCost * Math.pow(scalingFactor, currentLevel - 1));
+            
+            if (gameState.money >= currentCost) {
+                // Apply upgrade
+                switch (type) {
+                    case 'health':
+                        // Increase max health by 25
+                        gameState.maxHealth += 25;
+                        break;
+                    case 'speed':
+                        // Increase speed by 20%
+                        player.speed *= 1.2;
+                        break;
+                    case 'damage':
+                        // Increase damage multiplier by 50%
+                        gameState.damageMultiplier += 0.5;
+                        break;
+                }
+                
+                // Increment level
+                gameState.upgradeLevels[type]++;
+                
+                // Deduct cost
+                gameState.money -= currentCost;
+                
+                // Update display
+                shopMoneyValue.textContent = gameState.money;
+                
+                // Update shop item states
+                updateShopItemStates();
+                
+                // Show notification
+                showNotification(`${type.charAt(0).toUpperCase() + type.slice(1)} upgraded to level ${gameState.upgradeLevels[type]}!`, 'success');
+            } else {
+                showNotification(`Not enough money for ${type} upgrade!`, 'error');
+            }
+        }
+
+        // Purchase weapon
+        function purchaseWeapon(weaponIndex) {
+            const weapon = gameState.weapons[weaponIndex];
+            
+            if (gameState.money >= weapon.cost && !weapon.unlocked) {
+                // Unlock weapon
+                weapon.unlocked = true;
+                
+                // Deduct cost
+                gameState.money -= weapon.cost;
+                
+                // Update display
+                shopMoneyValue.textContent = gameState.money;
+                
+                // Switch to new weapon
+                gameState.currentWeapon = weaponIndex;
+                updateWeaponDisplay();
+                
+                // Remove weapon upgrade element
+                const weaponUpgradeElement = document.getElementById(`weapon${weaponIndex}Upgrade`);
+                if (weaponUpgradeElement) {
+                    shopContainer.removeChild(weaponUpgradeElement);
+                }
+                
+                // Update shop item states
+                updateShopItemStates();
+                
+                // Show notification
+                showNotification(`${weapon.name} unlocked! Weapon switched.`, 'success');
+            } else {
+                showNotification(`Not enough money to unlock ${weapon.name}!`, 'error');
+            }
+        }
+
+        // Show notification
+        function showNotification(message, type = 'info') {
+            // Set message
+            notificationElement.textContent = message;
+            
+            // Set type
+            notificationElement.className = 'notification';
+            notificationElement.classList.add(type);
+            
+            // Show notification
+            notificationElement.classList.add('show');
+            
+            // Hide after 3 seconds
+            setTimeout(() => {
+                notificationElement.classList.remove('show');
+            }, 3000);
+        }
+
+        // Switch weapon
+        function switchWeapon(weaponIndex) {
+            if (weaponIndex === gameState.currentWeapon) return;
+            
+            if (weaponIndex === 0 || gameState.weapons[weaponIndex].unlocked) {
+                gameState.currentWeapon = weaponIndex;
+                updateWeaponDisplay();
+                showNotification(`Switched to ${gameState.weapons[weaponIndex].name}`, 'info');
+            } else {
+                showNotification(`${gameState.weapons[weaponIndex].name} is locked! Purchase it in the shop.`, 'warning');
+            }
+        }
+
+        // Start the game
         function startGame() {
-            if (isGameRunning) return;
+            // Reset game state
+            gameState.score = 0;
+            gameState.timeRemaining = 60;
+            gameState.isGameActive = true;
+            gameState.isGameOver = false;
+            gameState.playerHealth = 100;
+            gameState.maxHealth = 100;
+            gameState.money = 0;
+            gameState.currentWave = 1;
+            gameState.damageMultiplier = 1.0;
             
-            score = 0;
-            scoreElement.textContent = `Score: ${score}`;
-            isGameRunning = true;
-            startButton.textContent = 'Game Running';
-            startButton.disabled = true;
+            // Reset upgrade levels
+            gameState.upgradeLevels = {
+                health: 1,
+                speed: 1,
+                damage: 1
+            };
             
-            moveTarget();
-            gameInterval = setInterval(moveTarget, 1000);
+            // Reset player speed
+            player.speed = 5.0;
+            
+            // Reset weapons
+            gameState.currentWeapon = 0;
+            for (let i = 1; i < gameState.weapons.length; i++) {
+                gameState.weapons[i].unlocked = false;
+            }
+            
+            // Clear bullets
+            for (let i = 0; i < bullets.length; i++) {
+                scene.remove(bullets[i].mesh);
+            }
+            bullets = [];
+            
+            // Update UI
+            scoreElement.textContent = gameState.score;
+            timerElement.textContent = gameState.timeRemaining;
+            healthValueElement.textContent = gameState.playerHealth;
+            healthFillElement.style.width = '100%';
+            moneyElement.textContent = gameState.money;
+            waveElement.textContent = gameState.currentWave;
+            waveMessageElement.style.opacity = '0';
+            shopContainer.style.display = 'none';
+            startScreen.style.display = 'none';
+            gameOverScreen.style.visibility = 'hidden';
+            
+            // Update weapon display
+            updateWeaponDisplay();
+            
+            // Request pointer lock
+            requestPointerLockFallback();
+            
+            // Start timer
+            gameInterval = setInterval(() => {
+                gameState.timeRemaining--;
+                timerElement.textContent = gameState.timeRemaining;
+                
+                if (gameState.timeRemaining <= 0) {
+                    endGame();
+                }
+            }, 1000);
         }
 
-        target.addEventListener('click', () => {
-            if (!isGameRunning) return;
-            score += 1;
-            scoreElement.textContent = `Score: ${score}`;
-            moveTarget();
+        // End the game
+        function endGame() {
+            clearInterval(gameInterval);
+            gameState.isGameActive = false;
+            gameState.isGameOver = true;
+            
+            // Update UI
+            finalScoreElement.textContent = gameState.score;
+            gameOverScreen.style.visibility = 'visible';
+            
+            // Play game over sound
+            sounds.gameOver.play();
+            
+            // Exit pointer lock
+            if (document.exitPointerLock) {
+                document.exitPointerLock();
+            } else if (document.mozExitPointerLock) {
+                document.mozExitPointerLock();
+            } else if (document.webkitExitPointerLock) {
+                document.webkitExitPointerLock();
+            }
+        }
+
+        // Restart the game
+        function restartGame() {
+            // Remove all existing ducks
+            for (let i = 0; i < ducks.length; i++) {
+                scene.remove(ducks[i].mesh);
+            }
+            ducks = [];
+            
+            // Create new ducks for first wave
+            createDucks(gameState.ducksPerWave);
+            
+            // Start game
+            startGame();
+        }
+
+        // Apply damage to player
+        function damagePlayer(amount) {
+            if (gameState.isGameOver) return;
+            
+            // Play hit sound
+            sounds.playerHit.currentTime = 0;
+            sounds.playerHit.play();
+            
+            // Reduce health
+            gameState.playerHealth = Math.max(0, gameState.playerHealth - amount);
+            
+            // Update UI
+            healthValueElement.textContent = gameState.playerHealth;
+            healthFillElement.style.width = gameState.playerHealth + '%';
+            
+            // Show damage overlay
+            damageOverlay.style.opacity = '0.7';
+            setTimeout(() => {
+                damageOverlay.style.opacity = '0';
+            }, 300);
+            
+            // Check if player is dead
+            if (gameState.playerHealth <= 0) {
+                endGame();
+            }
+        }
+        
+        // Update ducks movement and attacks
+        function updateDucks() {
+            for (let i = 0; i < ducks.length; i++) {
+                const duck = ducks[i];
+                
+                // Skip if duck is hit
+                if (duck.isHit) continue;
+                
+                // Get direction to player
+                const directionToPlayer = new THREE.Vector3();
+                directionToPlayer.subVectors(camera.position, duck.mesh.position);
+                directionToPlayer.y = 0; // Keep on same height plane
+                
+                // Calculate distance to player
+                const distanceToPlayer = directionToPlayer.length();
+                
+                // Normalize direction
+                directionToPlayer.normalize();
+                
+                // Move duck towards player if not too close
+                if (distanceToPlayer > 2) {
+                    // Move towards player
+                    duck.mesh.position.x += directionToPlayer.x * duck.speed;
+                    duck.mesh.position.z += directionToPlayer.z * duck.speed;
+                }
+                
+                // Always make duck face the player
+                duck.mesh.lookAt(new THREE.Vector3(camera.position.x, duck.mesh.position.y, camera.position.z));
+                
+                // Attack player if close enough
+                if (distanceToPlayer < 3) {
+                    // Reduce cooldown
+                    duck.attackCooldown--;
+                    
+                    // Attack if cooldown is ready
+                    if (duck.attackCooldown <= 0) {
+                        damagePlayer(duck.attackDamage);
+                        duck.attackCooldown = 60; // Reset cooldown (60 frames = ~1 second)
+                    }
+                }
+            }
+        }
+
+        // Animation loop
+        function animate() {
+            requestAnimationFrame(animate);
+            
+            if (gameState.isGameActive) {
+                updatePlayerPosition();
+                updateDucks();
+                updateBullets();
+                updateWeaponPosition();
+            }
+            
+            renderer.render(scene, camera);
+        }
+
+        // Handle window resize
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+
+        // Initialize event listeners for weapon selector
+        function initWeaponSelector() {
+            weaponOptions.forEach(option => {
+                option.addEventListener('click', () => {
+                    const weaponIndex = parseInt(option.getAttribute('data-weapon'));
+                    switchWeapon(weaponIndex);
+                });
+            });
+        }
+
+        // Initialize settings menu
+        function initSettingsMenu() {
+            // Settings button click
+            settingsButton.addEventListener('click', () => {
+                settingsMenu.style.display = 'flex';
+            });
+            
+            // Back button click
+            backButton.addEventListener('click', () => {
+                settingsMenu.style.display = 'none';
+            });
+            
+            // Sensitivity slider
+            sensitivitySlider.value = gameState.settings.sensitivity;
+            sensitivityValue.textContent = gameState.settings.sensitivity;
+            
+            sensitivitySlider.addEventListener('input', () => {
+                const value = parseInt(sensitivitySlider.value);
+                gameState.settings.sensitivity = value;
+                sensitivityValue.textContent = value;
+                
+                // Update player sensitivity immediately
+                updatePlayerSensitivity();
+            });
+            
+            // Graphics quality options
+            graphicsOptions.forEach(option => {
+                // Set initial active state
+                if (option.getAttribute('data-quality') === gameState.settings.graphicsQuality) {
+                    option.classList.add('active');
+                } else {
+                    option.classList.remove('active');
+                }
+                
+                option.addEventListener('click', () => {
+                    // Update active state
+                    graphicsOptions.forEach(opt => opt.classList.remove('active'));
+                    option.classList.add('active');
+                    
+                    // Update graphics quality
+                    const quality = option.getAttribute('data-quality');
+                    gameState.settings.graphicsQuality = quality;
+                    
+                    // Apply graphics settings
+                    applyGraphicsSettings();
+                });
+            });
+        }
+        
+        // Update player sensitivity based on settings
+        function updatePlayerSensitivity() {
+            // Scale base sensitivity (0.2) by the setting value (1-10)
+            player.mouseSensitivity = 0.2 * (gameState.settings.sensitivity / 5);
+        }
+        
+        // Apply graphics settings
+        function applyGraphicsSettings() {
+            const quality = gameState.settings.graphicsQuality;
+            
+            // Update renderer settings for a cartoony look
+            if (renderer) {
+                switch (quality) {
+                    case 'low':
+                        renderer.setPixelRatio(window.devicePixelRatio * 0.5);
+                        renderer.shadowMap.enabled = false;
+                        scene.fog = null; // No fog for cartoony look
+                        break;
+                    case 'medium':
+                        renderer.setPixelRatio(window.devicePixelRatio * 0.75);
+                        renderer.shadowMap.enabled = true;
+                        renderer.shadowMap.type = THREE.PCFShadowMap;
+                        scene.fog = null; // No fog for cartoony look
+                        break;
+                    case 'high':
+                        renderer.setPixelRatio(window.devicePixelRatio);
+                        renderer.shadowMap.enabled = true;
+                        renderer.shadowMap.type = THREE.PCFShadowMap; // Simpler shadows for cartoony look
+                        scene.fog = null; // No fog for cartoony look
+                        break;
+                }
+            }
+        }
+
+        // Initialize the game when the page loads
+        window.addEventListener('load', () => {
+            init();
+            initWeaponSelector();
+            initSettingsMenu();
+            updatePlayerSensitivity();
         });
 
-        startButton.addEventListener('click', startGame);
+        // Continue to next wave
+        function continueToNextWave() {
+            // Hide shop
+            shopContainer.style.display = 'none';
+            
+            // Start next wave
+            startNextWave();
+        }
+
+        // Start next wave
+        function startNextWave() {
+            // Increment wave counter
+            gameState.currentWave++;
+            waveElement.textContent = gameState.currentWave;
+            
+            // Show wave message
+            waveNumberElement.textContent = gameState.currentWave - 1;
+            waveMessageElement.style.opacity = '1';
+            
+            // Restore player health to max health
+            gameState.playerHealth = gameState.maxHealth;
+            healthValueElement.textContent = gameState.playerHealth;
+            healthFillElement.style.width = '100%';
+            
+            // Clear existing ducks
+            ducks = [];
+            
+            // Start next wave after delay
+            setTimeout(() => {
+                // Hide wave message
+                waveMessageElement.style.opacity = '0';
+                
+                // Calculate ducks for next wave (increase by 2 each wave)
+                const nextWaveDucks = gameState.ducksPerWave + (gameState.currentWave - 1) * 2;
+                
+                // Create ducks for next wave
+                createDucks(nextWaveDucks);
+                
+                // Resume game
+                gameState.isGameActive = true;
+                
+                // Request pointer lock
+                requestPointerLockFallback();
+                
+                // Add time for next wave
+                gameState.timeRemaining += 30;
+                timerElement.textContent = gameState.timeRemaining;
+            }, 3000);
+        }
+
+        // Update player position based on keyboard input
+        function updatePlayerPosition() {
+            const delta = clock.getDelta();
+            const moveSpeed = player.speed * delta;
+            
+            // Calculate forward and right vectors based on camera orientation
+            const forward = new THREE.Vector3(0, 0, -1).applyQuaternion(camera.quaternion);
+            forward.y = 0; // Keep movement on the horizontal plane
+            forward.normalize();
+            
+            const right = new THREE.Vector3(1, 0, 0).applyQuaternion(camera.quaternion);
+            right.normalize();
+            
+            // Reset velocity
+            let velocity = new THREE.Vector3(0, 0, 0);
+            
+            // Apply movement based on keys pressed
+            if (keyboard['KeyW'] || keyboard['ArrowUp']) {
+                velocity.add(forward.multiplyScalar(moveSpeed));
+            }
+            if (keyboard['KeyS'] || keyboard['ArrowDown']) {
+                velocity.sub(forward.multiplyScalar(moveSpeed));
+            }
+            if (keyboard['KeyA'] || keyboard['ArrowLeft']) {
+                velocity.sub(right.multiplyScalar(moveSpeed));
+            }
+            if (keyboard['KeyD'] || keyboard['ArrowRight']) {
+                velocity.add(right.multiplyScalar(moveSpeed));
+            }
+            
+            // Apply velocity to camera position
+            camera.position.add(velocity);
+            
+            // Constrain player to room boundaries
+            camera.position.x = Math.max(-9, Math.min(9, camera.position.x));
+            camera.position.z = Math.max(-9, Math.min(9, camera.position.z));
+            camera.position.y = player.height; // Keep player at constant height
+        }
     </script>
 </body>
 </html>
