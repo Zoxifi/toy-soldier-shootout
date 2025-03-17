@@ -38,6 +38,5 @@ You can play the game online at: [https://zoxifi.github.io/toy-soldier-shootout/
 - Three.js for 3D rendering
 
 ## Credits
-**Zoxifi**
-
-A fun mini project that I made in 3 days.
+- **Zoxifi**
+   - A fun mini project that I made in 3 days!
